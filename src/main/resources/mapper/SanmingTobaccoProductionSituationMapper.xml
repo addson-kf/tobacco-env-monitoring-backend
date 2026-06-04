@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.example.mapper.SanmingTobaccoProductionSituationMapper">
+
+    <sql id="selectCols">
+        SELECT
+            "CountyDistrict"            AS countyDistrict,
+            "Town"                      AS town,
+            "Village"                   AS village,
+            "Area"                      AS area,
+            "Contract Quantity"         AS contractQuantity,
+            "Acquisition Volume"        AS acquisitionVolume,
+            "Tobacco farming households" AS tobaccoFarming,
+            "Tobacco technicians"       AS tobaccoTechnic,
+            "Roasting rooms"            AS roastingRooms,
+            "Seedling Shelters"         AS seedlingShelter,
+            "Remarks"                   AS remarks,
+            "Year"                      AS year
+        FROM public."SanmingTobaccoProductionSituation"
+    </sql>
+
+    <sql id="whereFilter">
+        <where>
+            <if test="year != null">
+                AND "Year" = #{year}
+            </if>
+            <if test="county != null and county != ''">
+                AND "CountyDistrict" = #{county}
+            </if>
+            <if test="town != null and town != ''">
+                AND "Town" = #{town}
+            </if>
+            <if test="village != null and village != ''">
+                AND "Village" = #{village}
+            </if>
+        </where>
+    </sql>
+
+    <select id="findOne" resultType="org.example.model.SanmingTobaccoProductionSituation">
+        <include refid="selectCols"/>
+        <include refid="whereFilter"/>
+        LIMIT 1
+    </select>
+
+    <update id="update" parameterType="org.example.model.SanmingTobaccoProductionSituation">
+        UPDATE public."SanmingTobaccoProductionSituation"
+        SET
+            "Area" = #{area},
+            "Contract Quantity" = #{contractQuantity},
+            "Acquisition Volume" = #{acquisitionVolume},
+            "Tobacco farming households" = #{tobaccoFarming},
+            "Tobacco technicians" = #{tobaccoTechnic},
+            "Roasting rooms" = #{roastingRooms},
+            "Seedling Shelters" = #{seedlingShelter},
+            "Remarks" = #{remarks}
+        WHERE
+            "Year" = #{year}
+          AND "CountyDistrict" = #{countyDistrict}
+          AND "Town" = #{town}
+          AND "Village" = #{village}
+    </update>
+
+    <select id="list" resultType="org.example.model.SanmingTobaccoProductionSituation">
+        <include refid="selectCols"/>
+        <include refid="whereFilter"/>
+        ORDER BY "Year" DESC, "CountyDistrict", "Town", "Village"
+    </select>
+
+    <select id="countByFilter" resultType="long">
+        SELECT COUNT(1)
+        FROM public."SanmingTobaccoProductionSituation"
+        <include refid="whereFilter"/>
+    </select>
+
+    <select id="pageByFilter" resultType="org.example.model.SanmingTobaccoProductionSituation">
+        <include refid="selectCols"/>
+        <include refid="whereFilter"/>
+        ORDER BY "Year" DESC, "CountyDistrict", "Town", "Village"
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <insert id="add" parameterType="org.example.model.SanmingTobaccoProductionSituation">
+        INSERT INTO public."SanmingTobaccoProductionSituation" (
+            "CountyDistrict",
+            "Town",
+            "Village",
+            "Area",
+            "Contract Quantity",
+            "Acquisition Volume",
+            "Tobacco farming households",
+            "Tobacco technicians",
+            "Roasting rooms",
+            "Seedling Shelters",
+            "Remarks",
+            "Year"
+        ) VALUES (
+                     #{countyDistrict},
+                     #{town},
+                     #{village},
+                     #{area},
+                     #{contractQuantity},
+                     #{acquisitionVolume},
+                     #{tobaccoFarming},
+                     #{tobaccoTechnic},
+                     #{roastingRooms},
+                     #{seedlingShelter},
+                     #{remarks},
+                     #{year}
+                 )
+    </insert>
+
+    <delete id="delete">
+        DELETE FROM public."SanmingTobaccoProductionSituation"
+        WHERE "Year" = #{year}
+          AND "CountyDistrict" = #{countyDistrict}
+          AND "Town" = #{town}
+          AND "Village" = #{village}
+    </delete>
+
+</mapper>

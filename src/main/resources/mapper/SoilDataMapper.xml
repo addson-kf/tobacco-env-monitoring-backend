@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.example.mapper.SoilDataMapper">
+
+    <resultMap id="SoilDataMap" type="org.example.model.SoilData">
+        <id column="SoilDataID" property="soilDataID" />
+        <result column="MonitoringPointID" property="monitoringPointID" />
+        <result column="SoilAttribute" property="soilAttribute" />
+        <result column="Value" property="value" />
+        <result column="SamplingDate" property="samplingDate"
+                jdbcType="TIMESTAMP"
+                typeHandler="org.apache.ibatis.type.LocalDateTimeTypeHandler" />
+        <result column="IsDelete" property="delete" />
+        <result column="Classification" property="classification" />
+        <result column="OvenNumber" property="ovenNumber" />
+        <result column="IfLongTermMonitoringPoint" property="ifLongTermMonitoringPoint" />
+        <result column="Notes" property="notes" />
+        <result column="FarmerName" property="farmerName" />
+        <result column="SoilSamplingTime" property="soilSamplingTime" />
+    </resultMap>
+
+
+
+    <!-- 通用地区筛选片段：按需拼接县/乡/村 -->
+    <sql id="RegionFilter">
+        <if test="countyDistrict != null and countyDistrict != ''">
+            AND mp."CountyDistrict" = #{countyDistrict}
+        </if>
+        <if test="town != null and town != ''">
+            AND mp."Town" = #{town}
+        </if>
+        <if test="village != null and village != ''">
+            AND mp."Village" = #{village}
+        </if>
+    </sql>
+
+
+
+
+    <!-- 查询所有土壤数据 -->
+    <select id="findAll" resultMap="SoilDataMap">
+        SELECT * FROM public."SoilDatas" WHERE "IsDelete" = false
+    </select>
+
+    <!--修改某一种类的所有记录的值的分类-->
+    <update id="updateClassificationForSpecificAttribute">
+        UPDATE public."SoilDatas" s
+        SET "Classification" = r."Classification"
+        FROM public."SoilClassificationRules" r
+        WHERE s."SoilAttribute" = r."SoilAttribute"
+        AND s."Value" &gt;= r."MinValue"
+        AND s."Value" &lt; r."MaxValue"
+          AND s."SoilAttribute" = #{soilAttribute}::soil_parameters;
+    </update>
+
+    <!-- 查询所有土壤数据（包括已删除） -->
+    <select id="findAllForAdmin" resultMap="SoilDataMap">
+        SELECT * FROM public."SoilDatas"
+    </select>
+
+    <!-- 插入一条新的土壤数据记录，并自动根据 SoilAttribute 和 Value 设定 Classification -->
+    <insert id="insertWithClassification" parameterType="org.example.model.SoilData">
+        INSERT INTO public."SoilDatas" (
+        "MonitoringPointID",
+        "SoilAttribute",
+        "Value",
+        "SamplingDate",
+        "IsDelete",
+        "Classification",
+        "OvenNumber",
+        "Notes",
+        "FarmerName",
+        "SoilSamplingTime"
+        )
+        SELECT
+        #{monitoringPointID},
+        #{soilAttribute}::soil_parameters,
+        #{value},
+        #{samplingDate},
+        false,
+        r."Classification",
+        #{ovenNumber},
+
+        #{notes},
+        #{farmerName},
+        #{soilSamplingTime}
+        FROM public."SoilClassificationRules" r
+        WHERE r."SoilAttribute" = #{soilAttribute}::soil_parameters
+        AND #{value} &gt;= r."MinValue"
+        AND #{value} &lt; r."MaxValue"
+        LIMIT 1
+    </insert>
+
+    <!-- 删除指定 ID 的土壤数据 -->
+    <update id="softDeleteById">
+        UPDATE public."SoilDatas"
+        SET "IsDelete" = true,
+            "DeletedAt" = CURRENT_TIMESTAMP
+        WHERE "SoilDataID" = #{soilDataID}
+    </update>
+
+    <!-- 恢复已删除的土壤数据 -->
+    <update id="restoreById">
+        UPDATE public."SoilDatas"
+        SET "IsDelete" = false,
+            "DeletedAt" = NULL
+        WHERE "SoilDataID" = #{soilDataID}
+    </update>
+
+    <!-- 更新指定 ID 的数据，同时自动更新分类信息 -->
+    <update id="updateDataWithClassification" parameterType="org.example.model.SoilData">
+        UPDATE public."SoilDatas" s
+        SET
+        "MonitoringPointID" = #{monitoringPointID},
+        "SoilAttribute" = #{soilAttribute}::soil_parameters,
+        "Value" = #{value},
+        "SamplingDate" = #{samplingDate},
+        "OvenNumber" = #{ovenNumber},
+        "Notes" = #{notes},
+        "FarmerName" = #{farmerName},
+        "SoilSamplingTime"=#{soilSamplingTime},
+        "Classification" = r."Classification"
+        FROM public."SoilClassificationRules" r
+        WHERE s."SoilDataID" = #{soilDataID}
+        AND r."SoilAttribute" = #{soilAttribute}::soil_parameters
+        AND #{value} &gt;= r."MinValue"
+        AND #{value} &lt; r."MaxValue"
+    </update>
+
+    <select id="findById" resultMap="SoilDataMap">
+        SELECT * FROM public."SoilDatas"
+        WHERE "SoilDataID" = #{soilDataID}
+          AND "IsDelete" = false
+    </select>
+
+    <!-- 查询 SoilDataID 是否存在 -->
+    <select id="existsById" resultType="boolean">
+        SELECT COUNT(1) > 0 FROM public."SoilDatas"
+        WHERE "SoilDataID" = #{soilDataID}
+    </select>
+
+    <!-- 查询 SoilDataID 是否被删除 -->
+    <select id="isDeletedById" resultType="boolean">
+        SELECT "IsDelete" FROM public."SoilDatas"
+        WHERE "SoilDataID" = #{soilDataID}
+    </select>
+
+<!--    新增查询手段，改为按年查询-->
+    <select id="findByYearAndPage" resultMap="SoilDataMap">
+        SELECT * FROM public."SoilDatas"
+        WHERE "IsDelete" = false
+    WHERE year = #{year}
+    LIMIT #{pageSize} OFFSET #{offset};
+    </select>
+
+
+<!--    硬删除    -->
+    <delete id="hardDeleteExpired">
+        DELETE FROM public."SoilDatas"
+        WHERE "IsDelete" = true
+          AND "DeletedAt" IS NOT NULL
+          AND "DeletedAt" &lt; #{cutoff}
+    </delete>
+
+
+
+
+    <!-- 统计：按县区（可选） -->
+    <select id="countByCounty" parameterType="map" resultType="long">
+        SELECT COUNT(1)
+        FROM public."SoilDatas" s
+        JOIN public."MonitoringPoints" mp
+        ON mp."MonitoringPointID" = s."MonitoringPointID"
+        <where>
+            s."IsDelete" = false
+            <if test="countyDistrict != null and countyDistrict != ''">
+                AND mp."CountyDistrict" = #{countyDistrict}
+            </if>
+        </where>
+    </select>
+
+    <!-- 分页查询：按县区（可选） -->
+    <select id="findByCountyAndPage" parameterType="map" resultMap="SoilDataMap">
+        SELECT s.*
+        FROM public."SoilDatas" s
+        JOIN public."MonitoringPoints" mp
+        ON mp."MonitoringPointID" = s."MonitoringPointID"
+        <where>
+            s."IsDelete" = false
+            <if test="countyDistrict != null and countyDistrict != ''">
+                AND mp."CountyDistrict" = #{countyDistrict}
+            </if>
+        </where>
+        ORDER BY s."SoilDataID" ASC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 获取某字段所有取值：按县区（白名单选择列） -->
+    <select id="listFieldValuesByCounty" parameterType="map" resultType="java.lang.Object">
+        SELECT
+        <choose>
+            <when test="field == 'Value'"> s."Value" </when>
+            <when test="field == 'SamplingDate'"> s."SamplingDate" </when>
+            <when test="field == 'Classification'"> s."Classification" </when>
+            <when test="field == 'SoilAttribute'"> s."SoilAttribute" </when>
+            <!-- 如需扩展，在这里继续加 when -->
+            <otherwise> s."Value" </otherwise>
+        </choose>
+        FROM public."SoilDatas" s
+        JOIN public."MonitoringPoints" mp
+        ON mp."MonitoringPointID" = s."MonitoringPointID"
+        <where>
+            s."IsDelete" = false
+            <if test="countyDistrict != null and countyDistrict != ''">
+                AND mp."CountyDistrict" = #{countyDistrict}
+            </if>
+        </where>
+        ORDER BY s."SoilDataID" ASC
+    </select>
+
+    <select id="listFieldValuesByRegion" parameterType="map" resultType="java.lang.Object">
+        SELECT
+        <choose>
+            <when test="field == 'Value'"> s."Value" </when>
+            <when test="field == 'SamplingDate'"> s."SamplingDate" </when>
+            <when test="field == 'Classification'"> s."Classification" </when>
+            <when test="field == 'SoilAttribute'"> s."SoilAttribute" </when>
+            <!-- 可扩展其它字段时在这里追加 when -->
+            <otherwise> s."Value" </otherwise>
+        </choose>
+        FROM public."SoilDatas" s
+        JOIN public."MonitoringPoints" mp
+        ON mp."MonitoringPointID" = s."MonitoringPointID"
+        <where>
+            s."IsDelete" = false
+            <include refid="RegionFilter"/>
+        </where>
+        ORDER BY s."SoilDataID" ASC
+    </select>
+
+
+
+
+</mapper>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.example.mapper.MonitoringPointWithSoilDataMapper">
+
+    <!-- 联表的ResultMap -->
+    <resultMap id="MonitoringPointWithSoilDataMap" type="org.example.model.MonitoringPointWithSoilData">
+        <id property="monitoringPointID" column="MonitoringPointID"/>
+        <result property="ifLongTermMonitoringPoint" column="IfLongTermMonitoringPoint"/>
+        <result property="coordinates" column="Coordinates" typeHandler="org.example.handler.DoubleArrayTypeHandler"/>
+        <result property="elevation" column="Elevation"/>
+        <result property="tobaccoFieldType" column="TobaccoFieldType"/>
+        <result property="countyDistrict" column="CountyDistrict"/>
+        <result property="town" column="Town"/>
+        <result property="village" column="Village"/>
+
+        <collection property="soilDataList" ofType="org.example.model.SoilData">
+            <id column="SoilDataID" property="soilDataID"/>
+            <result column="SoilAttribute" property="soilAttribute"/>
+            <result column="Value" property="value"/>
+            <result column="SamplingDate" property="samplingDate" jdbcType="TIMESTAMP"
+                    typeHandler="org.apache.ibatis.type.LocalDateTimeTypeHandler"/>
+            <result column="Classification" property="classification"/>
+            <result column="OvenNumber" property="ovenNumber"/>
+            <result column="Notes" property="notes"/>
+            <result column="FarmerName" property="farmerName"/>
+            <result column="SoilSamplingTime" property="soilSamplingTime"/>
+        </collection>
+    </resultMap>
+
+    <!-- 联表查询方法 -->
+    <select id="getMonitoringPointWithSoilData" resultMap="MonitoringPointWithSoilDataMap">
+        SELECT mp."MonitoringPointID", mp."Coordinates", mp."Elevation", mp."TobaccoFieldType",
+               mp."CountyDistrict", mp."Town", mp."Village",
+               mp."IfLongTermMonitoringPoint",
+               sd."SoilDataID", sd."MonitoringPointID", sd."SoilAttribute", sd."Value",
+               sd."SamplingDate", sd."Classification", sd."OvenNumber"
+        FROM public."MonitoringPoints" mp
+                 LEFT JOIN public."SoilDatas" sd
+                           ON mp."MonitoringPointID" = sd."MonitoringPointID"
+        WHERE mp."IsDelete" = false
+    </select>
+
+</mapper>

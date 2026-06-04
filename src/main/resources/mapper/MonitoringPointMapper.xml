@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.example.mapper.MonitoringPointMapper">
+
+    <resultMap id="MonitoringPointResultMap" type="org.example.model.MonitoringPoint">
+        <id property="monitoringPointID" column="MonitoringPointID"/>
+        <result property="coordinates" column="Coordinates"
+                typeHandler="org.example.handler.DoubleArrayTypeHandler"/>
+        <result property="elevation" column="Elevation"/>
+        <result property="tobaccoFieldType" column="TobaccoFieldType"/>
+        <result property="countyDistrict" column="CountyDistrict"/>
+        <result property="town" column="Town"/>
+        <result property="village" column="Village"/>
+        <result property="delete" column="IsDelete"/>
+        <result property="videoCode" column="VideoCodes"/>
+        <result property="ifLongTermMonitoringPoint" column="IfLongTermMonitoringPoint"/>
+        <result column="SamplingDate" property="samplingDate"
+                jdbcType="TIMESTAMP"
+                typeHandler="org.apache.ibatis.type.LocalDateTimeTypeHandler" />
+        <result column="SoilSamplingTime" property="soilSamplingTime" />
+        <result property="imagePaths" column="ImagePaths"
+                typeHandler="org.example.mybatis.type.TextArrayToStringListTypeHandler"/>
+    </resultMap>
+
+    <!-- 查询所有监测点 -->
+    <select id="getAllMonitoringPoints" resultMap="MonitoringPointResultMap">
+        SELECT * FROM public."MonitoringPoints" WHERE "IsDelete" = false
+    </select>
+
+    <!-- 查询id是否存在 -->
+    <select id="existsMonitoringPoint" resultType="boolean">
+        SELECT COUNT(1) > 0 FROM public."MonitoringPoints" WHERE "MonitoringPointID" = #{monitoringPointID}
+    </select>
+
+    <!-- 插入新数据 -->
+    <insert id="insertMonitoringPoint" parameterType="org.example.model.MonitoringPoint">
+        INSERT INTO public."MonitoringPoints"
+        ("MonitoringPointID",
+         "Coordinates",
+         "Elevation",
+         "TobaccoFieldType",
+         "CountyDistrict",
+         "Town",
+         "Village",
+         "IsDelete",
+         "VideoCodes",
+         "IfLongTermMonitoringPoint",
+         "SamplingDate",
+         "SoilSamplingTime",
+         "ImagePaths"
+        )
+        VALUES
+            (#{monitoringPointID},
+             #{coordinates, typeHandler=org.example.handler.DoubleArrayTypeHandler},
+             #{elevation},
+             #{tobaccoFieldType}::tobacco_field_type, #{countyDistrict},
+             #{town},
+             #{village},
+             #{delete},
+             #{videoCode},
+             #{ifLongTermMonitoringPoint},
+             #{samplingDate},
+             #{soilSamplingTime}),
+            #{imagePaths, jdbcType=ARRAY,
+      typeHandler=org.example.mybatis.type.TextArrayToStringListTypeHandler}
+    </insert>
+
+    <!-- 根据ID逻辑删除数据 -->
+    <update id="deleteMonitoringPointById">
+        UPDATE public."MonitoringPoints"
+        SET "IsDelete" = true,
+            "DeletedAt" = CURRENT_TIMESTAMP
+        WHERE "MonitoringPointID" = #{monitoringPointID}
+    </update>
+
+    <!-- 根据ID更新所有字段 -->
+    <update id="updateMonitoringPointById" parameterType="org.example.model.MonitoringPoint">
+        UPDATE public."MonitoringPoints"
+        SET "Coordinates" = #{coordinates, typeHandler=org.example.handler.DoubleArrayTypeHandler},
+            "Elevation" = #{elevation},
+            "TobaccoFieldType" = #{tobaccoFieldType}::tobacco_field_type,
+            "CountyDistrict" = #{countyDistrict},
+            "Town" = #{town},
+            "Village" = #{village},
+            "IsDelete" = #{delete},
+            "VideoCodes" = #{videoCode},
+            "IfLongTermMonitoringPoint" = #{ifLongTermMonitoringPoint},
+            "SamplingDate" = #{samplingDate},
+            "SoilSamplingTime" = #{soilSamplingTime}
+            "ImagePaths" = #{imagePaths, jdbcType=ARRAY,
+                       typeHandler=org.example.mybatis.type.TextArrayToStringListTypeHandler}
+        WHERE "MonitoringPointID" = #{monitoringPointID}
+    </update>
+
+    <!-- 恢复删除数据 -->
+    <update id="restoreMonitoringPointById">
+        UPDATE public."MonitoringPoints"
+        SET "IsDelete" = false,
+            "DeletedAt" = NULL
+        WHERE "MonitoringPointID" = #{monitoringPointID}
+    </update>
+
+    <delete id="hardDeleteExpired">
+        DELETE FROM public."MonitoringPoints"
+        WHERE "IsDelete" = true
+          AND "DeletedAt" IS NOT NULL
+          AND "DeletedAt" &lt; #{cutoff}
+    </delete>
+
+    <!-- 查询所有监测点，包括被逻辑删除的（管理员使用） -->
+    <select id="getAllMonitoringPointsWithDeleted" resultMap="MonitoringPointResultMap">
+        SELECT * FROM public."MonitoringPoints"
+    </select>
+
+    <!-- 查询指定 ID 的监测点是否被删除 -->
+    <select id="isMonitoringPointDeleted" resultType="boolean">
+        SELECT "IsDelete" FROM public."MonitoringPoints" WHERE "MonitoringPointID" = #{monitoringPointID}
+    </select>
+
+    <select id="getMonitoringPointsBySoilCondition" resultMap="MonitoringPointResultMap" parameterType="map">
+        SELECT DISTINCT m.*  <!-- 使用DISTINCT避免同一监测点因多条土壤数据重复返回 -->
+        FROM public."MonitoringPoints" m
+        INNER JOIN public."SoilDatas" s
+        ON m."MonitoringPointID" = s."MonitoringPointID"
+        WHERE
+        m."IsDelete" = false       <!-- 过滤监测点逻辑删除数据 -->
+        AND s."IsDelete" = false   <!-- 过滤土壤数据逻辑删除数据 -->
+        AND s."SoilAttribute" = #{soilAttribute}::soil_parameters  <!-- 土壤属性 -->
+        AND s."Value" >= #{minValue}  <!-- 值范围下限 -->
+        AND s."Value" &lt; #{maxValue}   <!-- 值范围上限 -->
+    </select>
+
+    <select id="getMonitoringPointsByWeatherCondition" resultMap="MonitoringPointResultMap">
+        SELECT DISTINCT m.*
+        FROM public."MonitoringPoints" m
+                 INNER JOIN public."WeatherDatas" w
+                            ON m."MonitoringPointID" = w."MonitoringPointID"
+        WHERE
+            m."IsDelete" = false
+          AND w."IsDelete" = false
+          AND w."WeatherType" = #{weatherType}::weather_data_type
+        AND w."Value" >= #{minValue}
+          AND w."Value" &lt; #{maxValue}
+    </select>
+
+    <select id="getMonitoringPointsByAdministrativeDivision"
+            resultMap="MonitoringPointResultMap"
+            parameterType="map">
+        SELECT *
+        FROM public."MonitoringPoints"
+        WHERE
+        "IsDelete" = false  <!-- 过滤逻辑删除 -->
+        <if test="countyDistrict != null and countyDistrict != ''">
+            AND "CountyDistrict" LIKE CONCAT('%', #{countyDistrict}, '%')  <!-- 县 - 模糊查询 -->
+        </if>
+        <if test="town != null and town != ''">
+            AND "Town" LIKE CONCAT('%', #{town}, '%')  <!-- 乡 - 模糊查询 -->
+        </if>
+        <if test="village != null and village != ''">
+            AND "Village" LIKE CONCAT('%', #{village}, '%')  <!-- 村 - 模糊查询 -->
+        </if>
+    </select>
+
+    <select id="getMonitoringPointsByTobaccoCondition" resultMap="MonitoringPointResultMap">
+        SELECT DISTINCT m.*
+        FROM public."MonitoringPoints" m
+                 INNER JOIN public."TobaccoLeafDatas" t
+                            ON m."MonitoringPointID" = t."MonitoringPointID"
+        WHERE
+            m."IsDelete" = false
+          AND t."IsDelete" = false
+          AND t."TobaccoLeafData" = #{tobaccoLeafData}::tobacco_leaf_data_enum
+        AND t."Value" >= #{minValue}
+          AND t."Value" &lt; #{maxValue}
+    </select>
+
+    <!-- 根据种植面积查询监测点 -->
+    <select id="getMonitoringPointsByPlantingArea" resultMap="MonitoringPointResultMap">
+        SELECT DISTINCT m.*
+        FROM public."MonitoringPoints" m
+        INNER JOIN public."SanMingTobaccoFieldsBasicDatas" s
+        ON m."MonitoringPointID" = s."MonitoringPointID"
+        WHERE
+        m."IsDelete" = false
+        AND s."IsDelete" = false
+        AND s."PlantingArea" >= #{minValue}
+        AND s."PlantingArea" &lt; #{maxValue}
+    </select>
+
+    <!-- 根据计划合同量查询监测点 -->
+    <select id="getMonitoringPointsByPlannedContractAmount" resultMap="MonitoringPointResultMap">
+        SELECT DISTINCT m.*
+        FROM public."MonitoringPoints" m
+        INNER JOIN public."SanMingTobaccoFieldsBasicDatas" s
+        ON m."MonitoringPointID" = s."MonitoringPointID"
+        WHERE
+        m."IsDelete" = false
+        AND s."IsDelete" = false
+        AND s."PlannedContractAmount" >= #{minValue}
+        AND s."PlannedContractAmount" &lt; #{maxValue}
+    </select>
+
+    <!-- 根据收购数量查询监测点 -->
+    <select id="getMonitoringPointsByPurchaseQuantity" resultMap="MonitoringPointResultMap">
+        SELECT DISTINCT m.*
+        FROM public."MonitoringPoints" m
+        INNER JOIN public."SanMingTobaccoFieldsBasicDatas" s
+        ON m."MonitoringPointID" = s."MonitoringPointID"
+        WHERE
+        m."IsDelete" = false
+        AND s."IsDelete" = false
+        AND s."PurchaseQuantity" >= #{minValue}
+        AND s."PurchaseQuantity" &lt; #{maxValue}
+    </select>
+
+
+    <!-- 统计未删除监测点总数（可选县区过滤） -->
+    <select id="countActiveByFilter" resultType="long" parameterType="map">
+        SELECT COUNT(1)
+        FROM public."MonitoringPoints"
+        <where>
+            "IsDelete" = false
+            <if test="countyDistrict != null and countyDistrict != ''">
+                AND "CountyDistrict" = #{countyDistrict}
+            </if>
+        </where>
+    </select>
+
+    <!-- 统计总数：县/乡/村可空 -->
+    <select id="countActiveByRegion" resultType="long">
+        SELECT COUNT(1)
+        FROM public."MonitoringPoints" mp
+        <where>
+            mp."IsDelete" = false
+            <if test="countyDistrict != null and countyDistrict != ''">
+                AND mp."CountyDistrict" = #{countyDistrict}
+            </if>
+            <if test="town != null and town != ''">
+                AND mp."Town" = #{town}
+            </if>
+            <if test="village != null and village != ''">
+                AND mp."Village" = #{village}
+            </if>
+        </where>
+    </select>
+
+    <!-- 分页查询未删除监测点（可选县区过滤） -->
+    <select id="pageActiveByRegion" resultMap="MonitoringPointResultMap">
+    SELECT
+    mp.*
+    FROM public."MonitoringPoints" mp
+    <where>
+        mp."IsDelete" = false
+        <if test="countyDistrict != null and countyDistrict != ''">
+            AND mp."CountyDistrict" = #{countyDistrict}
+        </if>
+        <if test="town != null and town != ''">
+            AND mp."Town" = #{town}
+        </if>
+        <if test="village != null and village != ''">
+            AND mp."Village" = #{village}
+        </if>
+    </where>
+    ORDER BY mp."MonitoringPointID" ASC
+    LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+<!-- 图片查询-->
+    <select id="selectImagePathsById" resultType="java.lang.String">
+        SELECT unnest(COALESCE("ImagePaths", '{}'::text[])) AS path
+        FROM public."MonitoringPoints"
+        WHERE "MonitoringPointID" = #{monitoringPointID}
+    </select>
+
+    <!-- 2) 覆盖写入整个图片数组 -->
+    <update id="updateImagePaths">
+        UPDATE public."MonitoringPoints"
+        SET "ImagePaths" = #{imagePaths, jdbcType=ARRAY,
+        typeHandler=org.example.mybatis.type.TextArrayToStringListTypeHandler}
+        WHERE "MonitoringPointID" = #{monitoringPointID}
+    </update>
+
+    <!-- 3) 原子追加一条相对路径 -->
+    <update id="appendOneImagePath">
+        UPDATE public."MonitoringPoints"
+        SET "ImagePaths" = COALESCE("ImagePaths", '{}') || ARRAY[#{path}::text]
+        WHERE "MonitoringPointID" = #{monitoringPointID}
+    </update>
+
+    <!-- 4) 原子删除一条相对路径 -->
+    <update id="removeOneImagePath">
+        UPDATE public."MonitoringPoints"
+        SET "ImagePaths" = ARRAY(
+            SELECT unnest(COALESCE("ImagePaths", '{}'))
+      EXCEPT SELECT #{path}
+                           )
+        WHERE "MonitoringPointID" = #{monitoringPointID}
+    </update>
+
+
+
+
+
+</mapper>

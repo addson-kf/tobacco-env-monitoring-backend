@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<enum-mappings>
+    <enum class="org.example.model.enums.SamplingPeriod">
+        <entry key="BeforeRidging" value="Before_tobacco_field_ridging"/>
+        <entry key="AfterLeafHarvest" value="After_tobacco_leaf_harvesting"/>
+        <entry key="AfterRiceHarvesting" value="After_rice_harvest"/>
+    </enum>
+    <enum class="org.example.model.enums.SoilAttribute">
+        <entry key="pHMeasure" value="PH"/>
+        <entry key="CECMeasure" value="CEC"/>
+        <entry key="AlkaliNitro" value="Alkali_Hydrolyzable_Nitrogen"/>
+        <entry key="NitrateNitro" value="Nitrate_Nitrogen"/>
+        <entry key="AvailablePhos" value="Available_Phosphorus"/>
+        <entry key="AvailablePotas" value="Available_Potassium"/>
+        <entry key="SlowlyAvailablePotas" value="Slowly_Available_Potassium"/>
+        <entry key="OrganicMatterContent" value="Organic_Matter"/>
+        <entry key="ExchangeableCal" value="Exchangeable_Calcium"/>
+        <entry key="ExchangeableMag" value="Exchangeable_Magnesium"/>
+        <entry key="AvailableSulf" value="Available_Sulfur"/>
+        <entry key="WaterSolubleChl" value="Water_Soluble_Chlorine"/>
+        <entry key="AvailableCop" value="Available_Copper"/>
+        <entry key="AvailableIro" value="Available_Iron"/>
+        <entry key="AvailableMan" value="Available_Manganese"/>
+        <entry key="AvailableBor" value="Available_Boron"/>
+        <entry key="AvailableZin" value="Available_Zinc"/>
+        <entry key="AvailableMol" value="Available_Molybdenum"/>
+        <entry key="AvailableSil" value="Available_Silicon"/>
+        <entry key="TotalNitro" value="Total_Nitrogen"/>
+        <entry key="TotalPhos" value="Total_Phosphorus"/>
+        <entry key="TotalPotas" value="Total_Potassium"/>
+        <entry key="CultivatedLayerThick" value="Cultivated_Layer_Thickness"/>
+        <entry key="BulkDens" value="Bulk_Density"/>
+        <entry key="SoilCompact" value="Soil_Compaction"/>
+        <entry key="AggregateStruct" value="Aggregate_Structure"/>
+        <entry key="MicrobialBiomassCarb" value="Microbial_Biomass_Carbon"/>
+        <entry key="SoilSalinityLevel" value="Soil_Salinity"/>
+        <entry key="MulchResidueAmount" value="Mulch_Residue"/>
+    </enum>
+    <enum class="org.example.model.enums.SoilEnzymeActivityAnalysis">
+        <entry key="AcidPhosActivity" value="AcidPhosphatase"/>
+        <entry key="AcidProtActivity" value="AcidProtease"/>
+        <entry key="UreaseActLevel" value="Urease"/>
+        <entry key="NitrateReductaseAct" value="NitrateReductase"/>
+        <entry key="MicrobialCommunityStructAnalysis" value="MicrobialCommunityStructure"/>
+        <entry key="MicrobialCompositionAnalysis" value="MicrobialCompositionAnalysis"/>
+        <entry key="SpeciesDifferentiationAnalysis" value="SpeciesDifferentiationAnalysis"/>
+        <entry key="MicrobialCorrelationClustering" value="MicrobialCorrelationClustering"/>
+        <entry key="FunctionalPrediction16S" value="FunctionalPrediction16S"/>
+    </enum>
+    <enum class="org.example.model.enums.SoilQuality">
+        <entry key="LowQuality" value="low"/>
+        <entry key="LowMediumQuality" value="low_medium"/>
+        <entry key="MediumQuality" value="medium"/>
+        <entry key="MediumHighQuality" value="medium_high"/>
+        <entry key="HighQuality" value="high"/>
+    </enum>
+    <enum class="org.example.model.enums.TobaccoFieldType">
+        <entry key="SeedPlantingField" value="Seed_Field"/>
+        <entry key="NonSeedPlantingField" value="Non_Seed_Field"/>
+        <entry key="CigarTobaccoField" value="Cigar"/>
+    </enum>
+    <enum class="org.example.model.enums.TobaccoLeafDataEnum">
+        <entry key="NicotineAmount" value="Nicotine"/>
+        <entry key="TotalSugarAmount" value="TotalSugar"/>
+        <entry key="ReducingSugarAmount" value="ReducingSugar"/>
+        <entry key="TotalNitrogenAmount" value="TotalNitrogen"/>
+        <entry key="TotalPhosphorusAmount" value="TotalPhosphorus"/>
+        <entry key="TotalPotassiumAmount" value="TotalPotassium"/>
+        <entry key="TotalChlorineAmount" value="TotalChlorine"/>
+        <entry key="SugarNitrogenRatioValue" value="SugarNitrogenRatio"/>
+        <entry key="SugarNicotineRatioValue" value="SugarNicotineRatio"/>
+        <entry key="WaterSolubleSugarProteinRatioValue" value="WaterSolubleSugarProteinRatio"/>
+        <entry key="ReducingSugarTotalSugarRatioValue" value="ReducingSugarTotalSugarRatio"/>
+        <entry key="PotassiumChlorineRatioValue" value="PotassiumChlorineRatio"/>
+        <entry key="CalciumAmount" value="Calcium"/>
+        <entry key="MagnesiumAmount" value="Magnesium"/>
+        <entry key="SulfurAmount" value="Sulfur"/>
+        <entry key="IronAmount" value="Iron"/>
+        <entry key="ManganeseAmount" value="Manganese"/>
+    </enum>
+    <enum class="org.example.model.enums.TobaccoSmokingEvaluation">
+        <entry key="StrengthDegree" value="Strength"/>
+        <entry key="SmokeQualityDegree" value="SmokeQuality"/>
+        <entry key="OffFlavorDegree" value="OffFlavor"/>
+        <entry key="IrritationDegree" value="Irritation"/>
+        <entry key="StyleCharacteristicsDegree" value="StyleCharacteristics"/>
+    </enum>
+    <enum class="org.example.model.enums.WeatherType">
+        <entry key="SoilTemperatureMeasure" value="soil_temperature"/>
+        <entry key="SoilMoistureMeasure" value="soil_moisture"/>
+        <entry key="AirTemperatureMeasure" value="air_temperature"/>
+        <entry key="AirHumidityMeasure" value="air_humidity"/>
+        <entry key="WindSpeedMeasure" value="wind_speed"/>
+        <entry key="WindDirectionMeasure" value="wind_direction"/>
+        <entry key="PrecipitationAmount" value="precipitation"/>
+        <entry key="SolarRadiationMeasure" value="solar_radiation"/>
+    </enum>
+    <enum class="org.example.model.downloadtest.test.DeviceIdEnum">
+        <entry key="d-1001-pbcevsqqrslh-1-105" value="DEVICE_1001"/>
+        <entry key="d-1002-abcdefghijkl-2-106" value="DEVICE_1002"/>
+        <entry key="unknown_device" value="UNKNOWN"/>
+    </enum>
+</enum-mappings>

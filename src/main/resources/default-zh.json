@@ -1,0 +1,95 @@
+{
+  "SoilAttribute": {
+    "PH": "pH值",
+    "CEC": "阳离子交换量",
+    "Alkali_Hydrolyzable_Nitrogen": "碱解氮",
+    "Nitrate_Nitrogen": "硝态氮",
+    "Available_Phosphorus": "有效磷",
+    "Available_Potassium": "有效钾",
+    "Slowly_Available_Potassium": "缓效钾",
+    "Organic_Matter": "有机质",
+    "Exchangeable_Calcium": "交换性钙",
+    "Exchangeable_Magnesium": "交换性镁",
+    "Available_Sulfur": "有效硫",
+    "Water_Soluble_Chlorine": "水溶性氯",
+    "Available_Copper": "有效铜",
+    "Available_Iron": "有效铁",
+    "Available_Manganese": "有效锰",
+    "Available_Boron": "有效硼",
+    "Available_Zinc": "有效锌",
+    "Available_Molybdenum": "有效钼",
+    "Available_Silicon": "有效硅",
+    "Total_Nitrogen": "全氮",
+    "Total_Phosphorus": "全磷",
+    "Total_Potassium": "全钾",
+    "Cultivated_Layer_Thickness": "耕层厚度",
+    "Bulk_Density": "土壤容重",
+    "Soil_Compaction": "土壤紧实度",
+    "Aggregate_Structure": "水稳性大团聚体",
+    "Microbial_Biomass_Carbon": "土壤微生物生物量碳",
+    "Soil_Salinity": "土壤盐渍化程度",
+    "Mulch_Residue": "农膜残留量",
+    "Rapidly_Available_Potassium": "速效钾",
+    "Available_Phosphorus_NH4F_HCl": "有效磷-氟化铵盐酸",
+    "Available_Phosphorus_NaHCO3": "有效磷-碳酸氢钠提取法"
+  },
+  "WeatherType": {
+    "soil_temperature": "土壤温度",
+    "soil_moisture": "土壤湿度",
+    "air_temperature": "空气温度",
+    "air_humidity": "空气湿度",
+    "wind_speed": "风速",
+    "wind_direction": "风向",
+    "precipitation": "降水量",
+    "solar_radiation": "太阳辐射"
+  },
+  "TobaccoSmokingEvaluation": {
+    "Strength": "劲头",
+    "SmokeQuality": "烟雾质量",
+    "OffFlavor": "异味",
+    "Irritation": " 刺激性",
+    "StyleCharacteristics": "风味特征"
+  },
+  "TobaccoLeafDataEnum": {
+    "Nicotine": "尼古丁",
+    "ReducingSugar": "还原糖",
+    "TotalNitrogen": "总氮",
+    "TotalPhosphorus": "总磷",
+    "TotalPotassium": "总钾",
+    "TotalChlorine": "总氯",
+    "SugarNitrogenRatio": "糖氮比",
+    "SugarNicotineRatio": "糖尼古丁比",
+    "WaterSolubleSugarProteinRatio": "水溶性糖蛋白比",
+    "ReducingSugarTotalSugarRatio": "还原糖总糖比",
+    "PotassiumChlorineRatio": "PotassiumChlorineRatio",
+    "Calcium": "钙",
+    "Magnesium": "镁",
+    "Sulfur": "硫",
+    "Iron": "铁",
+    "Manganese": "锰"
+  },
+  "TobaccoFieldType": {
+    "Seed_Field": "制种田",
+    "Non_Seed_Field": "非制种田",
+    "Cigar": "雪茄"
+  },
+  "SoilEnzymeActivityAnalysis": {
+    "AcidPhosphatase": "土壤中的酸性磷酸酶活性",
+    "AcidProtease" : "土壤中的酸性蛋白酶活性",
+    "Urease" : "土壤中的尿素酶活性",
+    "NitrateReductase": "土壤中的硝酸还原酶活性" ,
+    "MicrobialCommunityStructure": "土壤中的微生物群落结构分析",
+    "MicrobialCompositionAnalysis": "土壤中的微生物组成分析",
+    "SpeciesDifferentiationAnalysis": "土壤中的物种区分分析",
+    "MicrobialCorrelationClustering": "土壤中的微生物关联聚类分析",
+    "FunctionalPrediction16S": "16S基因分析中的功能预测"
+  },
+  "SoilQuality": {
+    "low": "低",
+    "low_medium": "中低",
+    "medium": "中",
+    "medium_high": "中高",
+    "high": "高"
+  }
+
+}

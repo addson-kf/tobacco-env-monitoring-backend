@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD MyBatis Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+
+    <!-- 开启 MyBatis 驼峰命名匹配 -->
+    <settings>
+        <setting name="mapUnderscoreToCamelCase" value="true"/>
+    </settings>
+
+    <typeAliases>
+        <typeAlias alias="User" type="org.example.model.User"/>
+        <typeAlias alias="WarningData" type="org.example.model.downloadtest.WarningData"/>
+
+    </typeAliases>
+
+    <!-- 数据库环境配置 -->
+    <environments default="development">
+        <environment id="development">
+            <transactionManager type="MANAGED"/>
+            <dataSource type="POOLED">
+                <property name="driver" value="org.postgresql.Driver"/>
+                <property name="url" value="jdbc:postgresql://localhost:5432/your_database"/>
+                <property name="username" value="your_username"/>
+                <property name="password" value="your_password"/>
+            </dataSource>
+        </environment>
+    </environments>
+
+    <!-- 映射器 -->
+    <mappers>
+        <mapper resource="mapper/MonitoringPointWithSoilDataMapper.xml"/>
+        <mapper resource="mapper/WarningDataMapper.xml"/>
+        <mapper resource="mapper/UserMapper.xml"/>
+        <mapper resource="mapper/SoilClassificationMapper.xml"/>
+        <mapper resource="mapper/MonitoringPointMapper.xml"/>
+        <mapper resource="mapper/SoilDataMapper.xml"/>
+        <mapper resource="mapper/WeatherDataMapper.xml"/>
+        <mapper resource="mapper/SoilEnzymeActivityDataMapper.xml"/>
+        <mapper resource="mapper/TobaccoLeafDataMapper.xml"/>
+        <mapper resource="mapper/SmokingEvaluationDataMapper.xml"/>
+    </mappers>
+
+
+
+</configuration>
+

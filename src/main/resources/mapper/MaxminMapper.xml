@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.mapper.MaxminMapper">
+
+    <!-- 统一过滤（县/镇/村/年份/时段） -->
+    <sql id="COMMON_FILTER">
+        <where>
+            (t."IsDelete" = false OR t."IsDelete" IS NULL)
+            <if test="countyDistrict != null and countyDistrict != ''">
+                AND mp."CountyDistrict" = #{countyDistrict}
+            </if>
+            <if test="town != null and town != ''">
+                AND mp."Town" = #{town}
+            </if>
+            <if test="village != null and village != ''">
+                AND mp."Village" = #{village}
+            </if>
+            <if test="year != null">
+                AND EXTRACT(YEAR FROM t."SamplingDate") = #{year}
+            </if>
+            <if test="periodZh != null and periodZh != ''">
+                AND lower(btrim(t."SoilSamplingTime")) = lower(btrim(#{periodZh}))
+            </if>
+            <if test="tobaccoFieldType != null and tobaccoFieldType != ''">
+                AND mp."TobaccoFieldType" = CAST(#{tobaccoFieldType} AS tobacco_field_type)
+            </if>
+        </where>
+    </sql>
+
+    <!-- 小工具：将 Value 里可转数值的取出来参与 MAX/MIN -->
+    <sql id="VALUE_NUM">
+        CASE WHEN t."Value"::text ~ '^[+-]?[0-9]+(\\.[0-9]+)?$' THEN t."Value"::numeric END
+    </sql>
+
+    <!-- ========== SoilDatas（土壤）========== -->
+    <select id="soilMax" resultType="double">
+        SELECT MAX(<include refid="VALUE_NUM"/>)
+        FROM public."SoilDatas" t
+        JOIN public."MonitoringPoints" mp ON mp."MonitoringPointID" = t."MonitoringPointID"
+        <include refid="COMMON_FILTER"/>
+        <choose>
+            <!-- 默认：字符串比对，避免非法枚举崩溃 -->
+            <when test="useEnum == null or useEnum == false">
+                AND t."SoilAttribute"::text = #{attr}
+            </when>
+            <otherwise>
+                AND t."SoilAttribute" = CAST(#{attr} AS soil_parameters)
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="soilMin" resultType="double">
+        SELECT MIN(<include refid="VALUE_NUM"/>)
+        FROM public."SoilDatas" t
+        JOIN public."MonitoringPoints" mp ON mp."MonitoringPointID" = t."MonitoringPointID"
+        <include refid="COMMON_FILTER"/>
+        <choose>
+            <when test="useEnum == null or useEnum == false">
+                AND t."SoilAttribute"::text = #{attr}
+            </when>
+            <otherwise>
+                AND t."SoilAttribute" = CAST(#{attr} AS soil_parameters)
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- ========== SoilEnzymeActivityDatas（土壤酶）========== -->
+    <select id="enzymeMax" resultType="double">
+        SELECT MAX(<include refid="VALUE_NUM"/>)
+        FROM public."SoilEnzymeActivityDatas" t
+        JOIN public."MonitoringPoints" mp ON mp."MonitoringPointID" = t."MonitoringPointId"
+        <include refid="COMMON_FILTER"/>
+        <choose>
+            <when test="useEnum == null or useEnum == false">
+                AND t."SoilEnzymeActivityData"::text = #{attr}
+            </when>
+            <otherwise>
+                AND t."SoilEnzymeActivityData" = CAST(#{attr} AS soil_enzyme_activity_analysis)
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="enzymeMin" resultType="double">
+        SELECT MIN(<include refid="VALUE_NUM"/>)
+        FROM public."SoilEnzymeActivityDatas" t
+        JOIN public."MonitoringPoints" mp ON mp."MonitoringPointID" = t."MonitoringPointId"
+        <include refid="COMMON_FILTER"/>
+        <choose>
+            <when test="useEnum == null or useEnum == false">
+                AND t."SoilEnzymeActivityData"::text = #{attr}
+            </when>
+            <otherwise>
+                AND t."SoilEnzymeActivityData" = CAST(#{attr} AS soil_enzyme_activity_analysis)
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- ========== TobaccoLeafDatas（烟叶）========== -->
+    <select id="leafMax" resultType="double">
+        SELECT MAX(<include refid="VALUE_NUM"/>)
+        FROM public."TobaccoLeafDatas" t
+        JOIN public."MonitoringPoints" mp ON mp."MonitoringPointID" = t."MonitoringPointID"
+        <include refid="COMMON_FILTER"/>
+        <choose>
+            <when test="useEnum == null or useEnum == false">
+                AND t."TobaccoLeafData"::text = #{attr}
+            </when>
+            <otherwise>
+                AND t."TobaccoLeafData" = CAST(#{attr} AS tobacco_leaf_data_enum)
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="leafMin" resultType="double">
+        SELECT MIN(<include refid="VALUE_NUM"/>)
+        FROM public."TobaccoLeafDatas" t
+        JOIN public."MonitoringPoints" mp ON mp."MonitoringPointID" = t."MonitoringPointID"
+        <include refid="COMMON_FILTER"/>
+        <choose>
+            <when test="useEnum == null or useEnum == false">
+                AND t."TobaccoLeafData"::text = #{attr}
+            </when>
+            <otherwise>
+                AND t."TobaccoLeafData" = CAST(#{attr} AS tobacco_leaf_data_enum)
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- ========== WeatherDatas（天气）========== -->
+    <select id="weatherMax" resultType="double">
+        SELECT MAX(<include refid="VALUE_NUM"/>)
+        FROM public."WeatherDatas" t
+        JOIN public."MonitoringPoints" mp ON mp."MonitoringPointID" = t."MonitoringPointId"
+        <include refid="COMMON_FILTER"/>
+        <choose>
+            <when test="useEnum == null or useEnum == false">
+                AND t."WeatherType"::text = #{attr}
+            </when>
+            <otherwise>
+                AND t."WeatherType" = CAST(#{attr} AS weather_data_type)
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="weatherMin" resultType="double">
+        SELECT MIN(<include refid="VALUE_NUM"/>)
+        FROM public."WeatherDatas" t
+        JOIN public."MonitoringPoints" mp ON mp."MonitoringPointID" = t."MonitoringPointId"
+        <include refid="COMMON_FILTER"/>
+        <choose>
+            <when test="useEnum == null or useEnum == false">
+                AND t."WeatherType"::text = #{attr}
+            </when>
+            <otherwise>
+                AND t."WeatherType" = CAST(#{attr} AS weather_data_type)
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- ========== （可选）SmokingEvaluationDatas（感官/抽样评价）==========
+         如果该表也有 "Value" + 枚举字段，则比照上面写两条；暂留模板：
+    <select id="smokingMax" resultType="double"> ... </select>
+    <select id="smokingMin" resultType="double"> ... </select>
+    -->
+</mapper>

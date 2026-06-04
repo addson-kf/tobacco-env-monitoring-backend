@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.example.mapper.CountyProgressMapper">
+    <resultMap id="CountyProgressMap" type="org.example.model.CountyProgress">
+        <id     property="countyId"       column="CountyId"/>
+        <result property="countyDistrict" column="CountyDistrict"/>
+        <result property="town"           column="Town"/>
+        <result property="village"        column="Village"/>
+        <result property="progress"       column="Progress"/>
+        <result property="monitoringPointID" column="MonitoringPointID"/>
+    </resultMap>
+
+    <!-- 插入 -->
+    <insert id="insert" parameterType="org.example.model.CountyProgress" useGeneratedKeys="true" keyProperty="countyId">
+        INSERT INTO public."CountyProgress"
+            ("CountyDistrict",
+             "Town",
+             "Village",
+             "Progress",
+             "MonitoringPointID")
+        VALUES
+            (#{countyDistrict},
+             #{town},
+             #{village},
+             #{progress},
+             #{monitoringPointID})
+    </insert>
+
+    <insert id="upsert" parameterType="org.example.model.CountyProgress">
+        INSERT INTO public."CountyProgress"
+            ("CountyDistrict","Town","Village","Progress","MonitoringPointID")
+        VALUES (#{countyDistrict},#{town},#{village},#{progress},#{monitoringPointID})
+            ON CONFLICT ("CountyDistrict","Town","Village")
+  DO UPDATE SET
+            "Progress" = EXCLUDED."Progress",
+                     "MonitoringPointID" = EXCLUDED."MonitoringPointID"
+    </insert>
+
+    <!-- UPSERT：
+         如果你“一个 CTV 只保留一行”，请先在库里建唯一键 (CountyDistrict,Town,Village)
+         然后用下面这个 upsert（冲突时更新 Progress & MonitoringPointID）
+    -->
+
+<!--    <insert id="upsert" parameterType="org.example.model.CountyProgress">-->
+<!--        INSERT INTO public."CountyProgress"-->
+<!--            ("CountyDistrict",-->
+<!--             "Town",-->
+<!--             "Village",-->
+<!--             "Progress",-->
+<!--             "MonitoringPointID")-->
+<!--        VALUES (#{countyDistrict},-->
+<!--                #{town},-->
+<!--                #{village},-->
+<!--                #{progress},-->
+<!--                #{monitoringPointID})-->
+<!--            ON CONFLICT ("CountyDistrict","Town","Village")-->
+<!--        DO UPDATE SET-->
+<!--            "Progress" = EXCLUDED."Progress",-->
+<!--                           "MonitoringPointID" = EXCLUDED."MonitoringPointID"-->
+<!--    </insert>-->
+
+    <!-- 如果你的模型是“一村多监测点、多行”，请把唯一键改为
+         ("CountyDistrict","Town","Village","MonitoringPointID")
+         并把上面 ON CONFLICT 的冲突列改成四列。 -->
+
+    <!-- 根据 ID 更新所有字段 -->
+    <update id="updateCountyProgressById" parameterType="org.example.model.CountyProgress">
+        UPDATE public."CountyProgress"
+        SET "CountyDistrict"   = #{countyDistrict},
+            "Town"             = #{town},
+            "Village"          = #{village},
+            "Progress"         = #{progress},
+            "MonitoringPointID" = #{monitoringPointID}
+        WHERE "CountyId" = #{countyId}
+    </update>
+
+    <!-- 单条查询 -->
+    <select id="findOne" resultMap="CountyProgressMap">
+        SELECT * FROM public."CountyProgress"
+        WHERE "CountyDistrict" = #{county}
+          AND "Town" = #{town}
+          AND "Village" = #{village}
+            LIMIT 1
+    </select>
+
+    <!-- 过滤列表 -->
+    <select id="list" resultMap="CountyProgressMap">
+        SELECT *
+        FROM public."CountyProgress"
+        WHERE 1=1
+        <if test="county != null and county != ''">
+            AND "CountyDistrict" = #{county}
+        </if>
+        <if test="town != null and town != ''">
+            AND "Town" = #{town}
+        </if>
+        <if test="village != null and village != ''">
+            AND "Village" = #{village}
+        </if>
+        ORDER BY "CountyId" ASC   <!-- 改为按主键递增排序 -->
+    </select>
+
+    <!-- 分页计数 -->
+    <select id="countByFilter" resultType="long">
+        SELECT COUNT(1)
+        FROM public."CountyProgress"
+        WHERE 1=1
+        <if test="county != null and county != ''">
+            AND "CountyDistrict" = #{county}
+        </if>
+        <if test="town != null and town != ''">
+            AND "Town" = #{town}
+        </if>
+        <if test="village != null and village != ''">
+            AND "Village" = #{village}
+        </if>
+    </select>
+
+    <!-- 分页列表 -->
+    <select id="pageByFilter" resultMap="CountyProgressMap">
+        SELECT *
+        FROM public."CountyProgress"
+        WHERE 1=1
+        <if test="county != null and county != ''">
+            AND "CountyDistrict" = #{county}
+        </if>
+        <if test="town != null and town != ''">
+            AND "Town" = #{town}
+        </if>
+        <if test="village != null and village != ''">
+            AND "Village" = #{village}
+        </if>
+        ORDER BY "CountyId" ASC   <!-- 改为按主键递增排序 -->
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+
+
+
+
+
+
+</mapper>

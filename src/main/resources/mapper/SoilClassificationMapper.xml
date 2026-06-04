@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.mapper.SoilClassificationMapper">
+
+
+    <!-- 查询所有分类规则 -->
+    <select id="getAllSoilClassificationRules" resultType="org.example.model.SoilClassificationRule">
+        SELECT "SoilAttribute", "MinValue", "MaxValue", "Classification"
+        FROM "SoilClassificationRules"
+    </select>
+
+    <!-- 根据 SoilAttribute 枚举和数值获取对应的 SoilQuality -->
+    <select id="getSoilClassificationRuleByAttributeAndValue" resultType="org.example.model.SoilClassificationRule">
+        SELECT "SoilAttribute", "MinValue", "MaxValue", "Classification"
+        FROM "SoilClassificationRules"
+        WHERE "SoilAttribute"::TEXT = #{attribute}  <!-- 强制转换为 TEXT -->
+        AND #{value} BETWEEN "MinValue" AND "MaxValue"
+        LIMIT 1
+    </select>
+
+    <!-- 删除根据 SoilAttribute 的数据 -->
+    <delete id="deleteBySoilAttribute" parameterType="String">
+        DELETE FROM "SoilClassificationRules"
+        WHERE "SoilAttribute" = #{soilAttribute}::soil_parameters
+    </delete>
+
+    <!-- 批量插入 SoilClassificationRules -->
+    <insert id="batchInsert" parameterType="map">
+        INSERT INTO "SoilClassificationRules" ("SoilAttribute", "MinValue", "MaxValue", "Classification")
+        VALUES
+        <foreach collection="rules" item="rule" separator=",">
+            (#{soilAttribute}::soil_parameters, #{rule.minValue}, #{rule.maxValue}, #{rule.classification}::quality)
+        </foreach>
+    </insert>
+
+
+
+
+</mapper>

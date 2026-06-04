@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.mapper.SoilDataCalcMapper">
+
+    <select id="queryForCalc" resultType="map">
+        SELECT
+        sd."MonitoringPointID" AS "monitoringPointID",
+        sd."SamplingDate"      AS "samplingDate",
+        sd."SoilAttribute"     AS "soilAttribute",
+        sd."Value"             AS "value"
+        FROM public."SoilDatas" sd
+        /* 如需：JOIN public."MonitoringPoints" mp
+        ON mp."MonitoringPointID" = sd."MonitoringPointID" */
+        WHERE sd."IsDelete" IS FALSE
+
+        <!-- 时间范围：用请求里的 samplingDateFrom / samplingDateTo -->
+        <if test="samplingDateFrom != null and samplingDateFrom != ''">
+            AND sd."SamplingDate" &gt;= #{samplingDateFrom, jdbcType=TIMESTAMP}
+        </if>
+        <if test="samplingDateTo != null and samplingDateTo != ''">
+            AND sd."SamplingDate" &lt;  #{samplingDateTo, jdbcType=TIMESTAMP}
+        </if>
+
+        <!-- 地区筛选：如果你的库里确有这些列就保留；没有就删掉 -->
+        <if test="tobaccoFieldType != null and tobaccoFieldType != ''">
+            AND sd."TobaccoFieldType" = #{tobaccoFieldType}
+        </if>
+        <if test="countyDistrict != null and countyDistrict != ''">
+            AND sd."CountyDistrict" = #{countyDistrict}
+        </if>
+        <if test="town != null and town != ''">
+            AND sd."Town" = #{town}
+        </if>
+        <if test="village != null and village != ''">
+            AND sd."Village" = #{village}
+        </if>
+
+        <!-- 属性枚举：Postgres 枚举列与字符串比较，左侧转 text -->
+        <if test="attributes != null and attributes.size() &gt; 0">
+            AND sd."SoilAttribute"::text IN
+            <foreach collection="attributes" item="a" open="(" separator="," close=")">
+                #{a}
+            </foreach>
+        </if>
+
+        ORDER BY sd."MonitoringPointID", sd."SamplingDate"
+    </select>
+
+</mapper>

@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.mapper.SanMingBasicDataMapper">
+
+    <!-- 结果映射：库里的 SoilSamplingTime → 实体里的 samplingTime -->
+    <resultMap id="SanMingBasicDataResultMap" type="org.example.model.SanMingBasicData">
+        <id column="SanMingBasicDataId" property="id"/>
+        <result column="MonitoringPointID" property="monitoringPointId"/>
+        <result column="PlantingVariety" property="plantingVariety"/>
+        <result column="PlantingArea" property="plantingArea"/>
+        <result column="PlannedContractAmount" property="plannedContractAmount"/>
+        <result column="PurchaseQuantity" property="purchaseQuantity"/>
+        <result column="Describe" property="describe"/>
+        <result column="IsDelete" property="delete"/>
+        <result column="SamplingDate" property="samplingDate"
+                jdbcType="TIMESTAMP"
+                typeHandler="org.apache.ibatis.type.LocalDateTimeTypeHandler"/>
+        <!-- 关键：这里要写 samplingTime，不能写 soilSamplingTime -->
+        <result column="SoilSamplingTime" property="samplingTime"/>
+    </resultMap>
+
+    <!-- 通用地区筛选片段 -->
+    <sql id="RegionFilter">
+        <if test="countyDistrict != null and countyDistrict != ''">
+            AND mp."CountyDistrict" = #{countyDistrict}
+        </if>
+        <if test="town != null and town != ''">
+            AND mp."Town" = #{town}
+        </if>
+        <if test="village != null and village != ''">
+            AND mp."Village" = #{village}
+        </if>
+    </sql>
+
+    <!-- 插入数据 -->
+    <insert id="insertSanMingBasicData" parameterType="org.example.model.SanMingBasicData">
+        INSERT INTO "SanMingTobaccoFieldsBasicDatas"
+        (
+            "MonitoringPointID",
+            "PlantingVariety",
+            "PlantingArea",
+            "PlannedContractAmount",
+            "PurchaseQuantity",
+            "Describe",
+            "IsDelete",
+            "DeletedAt",
+            "SamplingDate",
+            "SoilSamplingTime"
+        )
+        VALUES
+            (
+                #{monitoringPointId},
+                #{plantingVariety},
+                #{plantingArea},
+                #{plannedContractAmount},
+                #{purchaseQuantity},
+                #{describe},
+                #{delete},
+                CASE WHEN #{delete} = true THEN CURRENT_TIMESTAMP ELSE NULL END,
+                #{samplingDate},
+                #{samplingTime}
+            )
+    </insert>
+
+    <!-- 获取所有非删除数据 -->
+    <select id="getAllActiveSanMingBasicData" resultMap="SanMingBasicDataResultMap">
+        SELECT *
+        FROM "SanMingTobaccoFieldsBasicDatas"
+        WHERE "IsDelete" = false
+    </select>
+
+    <!-- 获取所有数据 -->
+    <select id="getAllSanMingBasicData" resultMap="SanMingBasicDataResultMap">
+        SELECT *
+        FROM "SanMingTobaccoFieldsBasicDatas"
+    </select>
+
+    <!-- 逻辑删除 -->
+    <update id="deleteSanMingBasicDataById">
+        UPDATE "SanMingTobaccoFieldsBasicDatas"
+        SET
+            "IsDelete" = true,
+            "DeletedAt" = CURRENT_TIMESTAMP
+        WHERE "SanMingBasicDataId" = #{id}
+    </update>
+
+    <!-- 恢复 -->
+    <update id="restoreSanMingBasicDataById">
+        UPDATE "SanMingTobaccoFieldsBasicDatas"
+        SET
+            "IsDelete" = false,
+            "DeletedAt" = NULL
+        WHERE "SanMingBasicDataId" = #{id}
+    </update>
+
+    <!-- id 是否存在 -->
+    <select id="checkIdExists" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM "SanMingTobaccoFieldsBasicDatas"
+        WHERE "SanMingBasicDataId" = #{id}
+    </select>
+
+    <!-- 是否被删 -->
+    <select id="isSanMingBasicDataDeleted" resultType="boolean">
+        SELECT "IsDelete"
+        FROM "SanMingTobaccoFieldsBasicDatas"
+        WHERE "SanMingBasicDataId" = #{id}
+    </select>
+<!--硬删除-->
+    <delete id="hardDeleteExpired">
+        DELETE FROM "SanMingTobaccoFieldsBasicDatas"
+        WHERE "IsDelete" = true
+          AND "DeletedAt" IS NOT NULL
+          AND "DeletedAt" &lt; #{cutoff}
+    </delete>
+    <!-- 更新 -->
+    <update id="updateSanMingBasicDataById" parameterType="org.example.model.SanMingBasicData">
+        UPDATE "SanMingTobaccoFieldsBasicDatas"
+        SET
+            "MonitoringPointID"       = #{monitoringPointId},
+            "PlantingVariety"         = #{plantingVariety},
+            "PlantingArea"            = #{plantingArea},
+            "PlannedContractAmount"   = #{plannedContractAmount},
+            "PurchaseQuantity"        = #{purchaseQuantity},
+            "Describe"                = #{describe},
+            "IsDelete"                = #{delete},
+            "DeletedAt"               = CASE
+                                            WHEN #{delete} = true THEN COALESCE("DeletedAt", CURRENT_TIMESTAMP)
+                                            ELSE NULL
+                END,
+            "SamplingDate"            = #{samplingDate},
+            "SoilSamplingTime"        = #{samplingTime}
+        WHERE "SanMingBasicDataId" = #{id}
+    </update>
+
+    <!-- 按监测点查（未删） -->
+    <select id="getSanMingBasicDataByMonitoringPointId"
+            resultMap="SanMingBasicDataResultMap"
+            parameterType="int">
+        SELECT *
+        FROM "SanMingTobaccoFieldsBasicDatas"
+        WHERE "MonitoringPointID" = #{monitoringPointId}
+          AND "IsDelete" = false
+    </select>
+
+    <!-- 统计：按县区 -->
+    <select id="countByCounty" parameterType="map" resultType="long">
+        SELECT COUNT(1)
+        FROM public."SanMingTobaccoFieldsBasicDatas" s
+        JOIN public."MonitoringPoints" mp
+        ON mp."MonitoringPointID" = s."MonitoringPointID"
+        <where>
+            s."IsDelete" = false
+            <if test="countyDistrict != null and countyDistrict != ''">
+                AND mp."CountyDistrict" = #{countyDistrict}
+            </if>
+        </where>
+    </select>
+
+    <!-- 分页：按县区 -->
+    <select id="findByCountyAndPage" parameterType="map" resultMap="SanMingBasicDataResultMap">
+        SELECT s.*
+        FROM public."SanMingTobaccoFieldsBasicDatas" s
+        JOIN public."MonitoringPoints" mp
+        ON mp."MonitoringPointID" = s."MonitoringPointID"
+        <where>
+            s."IsDelete" = false
+            <if test="countyDistrict != null and countyDistrict != ''">
+                AND mp."CountyDistrict" = #{countyDistrict}
+            </if>
+        </where>
+        ORDER BY s."SanMingBasicDataId" ASC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 按县区取某一列 -->
+    <select id="listFieldValuesByCounty" parameterType="map" resultType="java.lang.Object">
+        SELECT
+        <choose>
+            <when test="field == 'PlantingArea'"> s."PlantingArea" </when>
+            <when test="field == 'PlannedContractAmount'"> s."PlannedContractAmount" </when>
+            <when test="field == 'PurchaseQuantity'"> s."PurchaseQuantity" </when>
+            <when test="field == 'Describe'"> s."Describe" </when>
+            <otherwise> s."Describe" </otherwise>
+        </choose>
+        FROM public."SanMingTobaccoFieldsBasicDatas" s
+        JOIN public."MonitoringPoints" mp
+        ON mp."MonitoringPointID" = s."MonitoringPointID"
+        <where>
+            s."IsDelete" = false
+            <if test="countyDistrict != null and countyDistrict != ''">
+                AND mp."CountyDistrict" = #{countyDistrict}
+            </if>
+        </where>
+        ORDER BY s."SanMingBasicDataId" ASC
+    </select>
+
+    <!-- 按县/乡/村取某一列 -->
+    <select id="listFieldValuesByRegion" parameterType="map" resultType="java.lang.Object">
+        SELECT
+        <choose>
+            <when test="field == 'PlantingArea'"> s."PlantingArea" </when>
+            <when test="field == 'PlannedContractAmount'"> s."PlannedContractAmount" </when>
+            <when test="field == 'PurchaseQuantity'"> s."PurchaseQuantity" </when>
+            <when test="field == 'Describe'"> s."Describe" </when>
+            <otherwise> s."Describe" </otherwise>
+        </choose>
+        FROM public."SanMingTobaccoFieldsBasicDatas" s
+        JOIN public."MonitoringPoints" mp
+        ON mp."MonitoringPointID" = s."MonitoringPointID"
+        <where>
+            s."IsDelete" = false
+            <include refid="RegionFilter"/>
+        </where>
+        ORDER BY s."SanMingBasicDataId" ASC
+    </select>
+
+</mapper>

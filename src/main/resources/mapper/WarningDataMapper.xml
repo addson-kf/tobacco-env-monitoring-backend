@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.mapper.WarningDataMapper">
+
+    <!-- 查询所有警告数据 -->
+    <select id="findAll" resultType="org.example.model.downloadtest.WarningData">
+        SELECT device, content, time
+        FROM warning_data
+    </select>
+
+    <!-- 插入警告数据 -->
+    <insert id="insertWarningData" parameterType="org.example.model.downloadtest.WarningData">
+        INSERT INTO warning_data (device, content, time)
+        VALUES (#{device}, #{content}, #{time})
+    </insert>
+
+</mapper>

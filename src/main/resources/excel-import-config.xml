@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<importConfig>
+    <!-- 多个 Excel 文件配置 -->
+    <excelFiles>
+        <!-- 第一个 Excel 文件：土壤数据 -->
+        <!--<excelFile>
+            <modelClass>org.example.model.SoilData</modelClass>
+            <serviceClass>soilDataServiceImpl</serviceClass>
+            <sheets>
+                <sheet name="Sheet1">
+                    <headerRowIndex>0</headerRowIndex>
+                    <dataStartRowIndex>1</dataStartRowIndex>
+                    <fieldMappings>
+                        &lt;!&ndash; 监测点 ID &ndash;&gt;
+                        <field excelHeader="编号" modelField="monitoringPointID" type="INTEGER" />
+                        &lt;!&ndash; 烤房编号 &ndash;&gt;
+                        <field excelHeader="对应烤房编号" modelField="ovenNumber" type="STRING" defaultValue="无"/>
+                        &lt;!&ndash; 是否长期监测点 &ndash;&gt;
+                        <field excelHeader="是否长期监测点" modelField="ifLongTermMonitoringPoint" type="BOOLEAN" trueValue="是" falseValue="否" defaultValue="false"/>
+                        &lt;!&ndash; 备注 &ndash;&gt;
+                        <field excelHeader="备注" modelField="notes" type="STRING" defaultValue="无"/>
+                        &lt;!&ndash; 农户姓名 &ndash;&gt;
+                        <field excelHeader="农户姓名" modelField="farmerName" type="STRING" defaultValue="/"/>
+                        &lt;!&ndash; 土壤属性 + 数值（pH 值为例） &ndash;&gt;
+                        <field excelHeader="pH值" modelField="soilAttribute" type="ENUM"
+                               enumClass="org.example.model.enums.SoilAttribute" enumValue="PH" />
+                        <field excelHeader="pH值" modelField="value" type="DOUBLE" />
+                        &lt;!&ndash; 交换性钙 &ndash;&gt;
+                        <field excelHeader="交换性钙(1/2 cmol/kg)" modelField="soilAttribute" type="ENUM"
+                               enumClass="org.example.model.enums.SoilAttribute" enumValue="Exchangeable_Calcium" />
+                        <field excelHeader="交换性钙(1/2 cmol/kg)" modelField="value" type="DOUBLE" />
+                        &lt;!&ndash; 交换性镁 &ndash;&gt;
+                        <field excelHeader="交换性镁(1/2 cmol/kg)" modelField="soilAttribute" type="ENUM"
+                               enumClass="org.example.model.enums.SoilAttribute" enumValue="Exchangeable_Magnesium" />
+                        <field excelHeader="交换性镁(1/2 cmol/kg)" modelField="value" type="DOUBLE" />
+                        &lt;!&ndash; 有效铁 &ndash;&gt;
+                        <field excelHeader="有效铁(mg/kg)" modelField="soilAttribute" type="ENUM"
+                               enumClass="org.example.model.enums.SoilAttribute" enumValue="Available_Iron" />
+                        <field excelHeader="有效铁(mg/kg)" modelField="value" type="DOUBLE" />
+                        &lt;!&ndash; 有效锰 &ndash;&gt;
+                        <field excelHeader="有效锰(mg/kg)" modelField="soilAttribute" type="ENUM"
+                               enumClass="org.example.model.enums.SoilAttribute" enumValue="Available_Manganese" />
+                        <field excelHeader="有效锰(mg/kg)" modelField="value" type="DOUBLE" />
+                        &lt;!&ndash; 有效铜 &ndash;&gt;
+                        <field excelHeader="有效铜(mg/kg)" modelField="soilAttribute" type="ENUM"
+                               enumClass="org.example.model.enums.SoilAttribute" enumValue="Available_Copper" />
+                        <field excelHeader="有效铜(mg/kg)" modelField="value" type="DOUBLE" />
+                    </fieldMappings>
+                </sheet>
+            </sheets>
+        </excelFile>-->
+    </excelFiles>
+</importConfig>

@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.example.mapper.SmokingEvaluationDataMapper">
+
+    <sql id="BaseColumns">
+        COALESCE(SmokingEvaluationDataId, SmokingEvaluationId)         AS smokingEvaluationId,
+    COALESCE(MonitoringPointID, MonitoringPointId)                 AS monitoringPointId,
+    COALESCE(Describe, Description)                                AS describe,
+    COALESCE(IsDelete, is_delete, Deleted, isDeleted)              AS `delete`,
+    COALESCE(EvaluationDate, SamplingDate)                         AS evaluationDate,
+    COALESCE(SmokingEvaluationData, EvaluationScore, Score, Value) AS smokingEvaluationData
+    </sql>
+
+    <resultMap id="SmokingEvaluationDataResultMap" type="org.example.model.SmokingEvaluationData">
+        <id     column="SmokingEvaluationId"    property="smokingEvaluationId"/>
+        <result column="MonitoringPointID"      property="monitoringPointId"/>
+
+        <!-- ✅ 关键：枚举专用处理器，把 DB 返回的字符串（如 Strength）转成 TobaccoSmokingEvaluation -->
+        <result column="SmokingEvaluationData"
+                property="smokingEvaluationData"
+                javaType="org.example.model.enums.TobaccoSmokingEvaluation"
+                typeHandler="org.apache.ibatis.type.EnumTypeHandler"/>
+
+        <result column="Describe"               property="describe"/>
+        <result column="SamplingDate"           property="samplingDate"
+                jdbcType="TIMESTAMP" typeHandler="org.apache.ibatis.type.LocalDateTimeTypeHandler"/>
+
+        <!-- ✅ 修正目标属性名：实体是 samplingTime -->
+        <result column="SoilSamplingTime" property="soilSamplingTime"/>
+        <result column="DeletedAt" property="deletedAt"
+                jdbcType="TIMESTAMP" typeHandler="org.apache.ibatis.type.LocalDateTimeTypeHandler"/>
+
+    </resultMap>
+
+
+    <!-- 通用地区筛选片段：按需拼接县/乡/村 -->
+    <sql id="RegionFilter">
+        <if test="countyDistrict != null and countyDistrict != ''">
+            AND mp."CountyDistrict" = #{countyDistrict}
+        </if>
+        <if test="town != null and town != ''">
+            AND mp."Town" = #{town}
+        </if>
+        <if test="village != null and village != ''">
+            AND mp."Village" = #{village}
+        </if>
+    </sql>
+
+
+
+    <!-- 插入数据 -->
+    <insert id="insertSmokingEvaluationData" parameterType="org.example.model.SmokingEvaluationData">
+        INSERT INTO "SmokingEvaluationDatas"
+        ("MonitoringPointID",
+         "SmokingEvaluationData",
+         "Describe",
+         "SamplingDate",
+         "SoilSamplingTime",
+         "IsDelete")
+        VALUES
+            (#{monitoringPointId},
+             #{smokingEvaluationData}::tobacco_smoking_evaluation,
+             #{describe},
+             #{samplingDate},
+             #{soilSamplingTime},
+             #{delete})
+    </insert>
+
+    <!-- 获取所有非删除数据 -->
+    <select id="getAllActiveSmokingEvaluationData" resultMap="SmokingEvaluationDataResultMap">
+        SELECT * FROM "SmokingEvaluationDatas"
+        WHERE "IsDelete" = false
+    </select>
+
+    <!-- 获取所有数据 -->
+    <select id="getAllSmokingEvaluationData" resultMap="SmokingEvaluationDataResultMap">
+        SELECT * FROM "SmokingEvaluationDatas"
+    </select>
+
+    <!-- 根据 SmokingEvaluationId 删除数据 -->
+    <update id="deleteSmokingEvaluationDataById">
+        UPDATE "SmokingEvaluationDatas"
+        SET "IsDelete" = true,
+            "DeletedAt" = CURRENT_TIMESTAMP
+        WHERE "SmokingEvaluationId" = #{smokingEvaluationId}
+    </update>
+
+    <!-- 根据 SmokingEvaluationId 恢复数据 -->
+    <update id="restoreSmokingEvaluationDataById">
+        UPDATE "SmokingEvaluationDatas"
+        SET "IsDelete" = false,
+            "DeletedAt" = NULL
+        WHERE "SmokingEvaluationId" = #{smokingEvaluationId}
+    </update>
+
+    <!-- 查询 SmokingEvaluationId 是否存在 -->
+    <select id="checkSmokingEvaluationIdExists" resultType="boolean">
+        SELECT COUNT(*) > 0 FROM "SmokingEvaluationDatas"
+        WHERE "SmokingEvaluationId" = #{smokingEvaluationId}
+    </select>
+
+    <!-- 查询 SmokingEvaluationId 下的数据是否已删除 -->
+    <select id="isSmokingEvaluationDataDeleted" resultType="boolean">
+        SELECT "IsDelete" FROM "SmokingEvaluationDatas"
+        WHERE "SmokingEvaluationId" = #{smokingEvaluationId}
+    </select>
+
+    <!-- 根据 MonitoringPointID 查询数据 -->
+    <select id="getSmokingEvaluationDataByMonitoringPointId" resultMap="SmokingEvaluationDataResultMap">
+        SELECT * FROM "SmokingEvaluationDatas"
+        WHERE "MonitoringPointID" = #{monitoringPointId}
+    </select>
+<!--    硬删除-->
+    <delete id="hardDeleteExpired">
+        DELETE FROM "SmokingEvaluationDatas"
+        WHERE "IsDelete" = true
+          AND "DeletedAt" IS NOT NULL
+          AND "DeletedAt" &lt; #{cutoff}
+    </delete>
+
+    <!-- 根据 SmokingEvaluationId 更新数据 -->
+    <update id="updateSmokingEvaluationDataById" parameterType="org.example.model.SmokingEvaluationData">
+        UPDATE "SmokingEvaluationDatas"
+        SET
+            "MonitoringPointID" = #{monitoringPointId},
+            "SmokingEvaluationData" = #{smokingEvaluationData}::tobacco_smoking_evaluation,
+        "Describe" = #{describe},
+            "SamplingDate" = #{samplingDate},
+            "IsDelete" = #{delete},
+            "DeletedAt" = CASE
+            WHEN #{delete} = true THEN COALESCE("DeletedAt", CURRENT_TIMESTAMP)
+            ELSE NULL
+        END,
+        "SoilSamplingTime" = #{soilSamplingTime}
+        WHERE "SmokingEvaluationId" = #{smokingEvaluationId}
+    </update>
+
+
+
+
+    <!-- 统计：按县区（可选） -->
+    <select id="countByCounty" parameterType="map" resultType="long">
+        SELECT COUNT(1)
+        FROM public."SmokingEvaluationDatas" s
+        JOIN public."MonitoringPoints" mp
+        ON mp."MonitoringPointID" = s."MonitoringPointID"
+        <where>
+            s."IsDelete" = false
+            <if test="countyDistrict != null and countyDistrict != ''">
+                AND mp."CountyDistrict" = #{countyDistrict}
+            </if>
+        </where>
+    </select>
+
+
+
+
+    <!-- 分页查询：按县区（可选） -->
+    <select id="findByCountyAndPage" parameterType="map" resultMap="SmokingEvaluationDataResultMap">
+        SELECT s.*
+        FROM public."SmokingEvaluationDatas" s
+        JOIN public."MonitoringPoints" mp
+        ON mp."MonitoringPointID" = s."MonitoringPointID"
+        <where>
+            s."IsDelete" = false
+            <if test="countyDistrict != null and countyDistrict != ''">
+                AND mp."CountyDistrict" = #{countyDistrict}
+            </if>
+        </where>
+        ORDER BY s."SmokingEvaluationId" ASC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 获取某字段所有取值：按县区（白名单选择列） -->
+    <select id="listFieldValuesByCounty" parameterType="map" resultType="java.lang.Object">
+        SELECT
+        <choose>
+            <when test="field == 'SmokingEvaluationData'"> s."SmokingEvaluationData" </when>
+            <when test="field == 'SamplingDate'"> s."SamplingDate" </when>
+            <when test="field == 'Describe'"> s."Describe" </when>
+            <!-- 如需扩展，在这里继续加 when -->
+            <otherwise> s."SamplingDate" </otherwise>
+        </choose>
+        FROM public."SmokingEvaluationDatas" s
+        JOIN public."MonitoringPoints" mp
+        ON mp."MonitoringPointID" = s."MonitoringPointID"
+        <where>
+            s."IsDelete" = false
+            <if test="countyDistrict != null and countyDistrict != ''">
+                AND mp."CountyDistrict" = #{countyDistrict}
+            </if>
+        </where>
+        ORDER BY s."SmokingEvaluationId" ASC
+    </select>
+
+
+
+    <select id="listFieldValuesByRegion" parameterType="map" resultType="java.lang.Object">
+        SELECT
+        <choose>
+            <when test="field == 'SmokingEvaluationData'"> s."SmokingEvaluationData" </when>
+            <when test="field == 'SamplingDate'"> s."SamplingDate" </when>
+            <when test="field == 'Describe'"> s."Describe" </when>
+            <otherwise> s."SamplingDate" </otherwise>
+        </choose>
+        FROM public."SmokingEvaluationDatas" s
+        JOIN public."MonitoringPoints" mp
+        ON mp."MonitoringPointID" = s."MonitoringPointID"
+        <where>
+            s."IsDelete" = false
+            <include refid="RegionFilter"/>
+        </where>
+        ORDER BY s."SmokingEvaluationId" ASC
+    </select>
+
+
+
+
+</mapper>

@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.mapper.TobaccoLeafDataMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="TobaccoLeafDataResultMap" type="org.example.model.TobaccoLeafData">
+        <id column="TobaccoDataId" property="tobaccoDataId"/>
+        <result column="MonitoringPointID" property="monitoringPointID"/>
+        <result column="TobaccoLeafData" property="tobaccoLeafData"/>
+        <result column="Value" property="value"/>
+        <result column="SamplingDate" property="samplingDate" jdbcType="TIMESTAMP"
+                typeHandler="org.apache.ibatis.type.LocalDateTimeTypeHandler"/>
+        <result column="IsDelete" property="delete"/>
+        <result column="Classification" property="classification"/>
+        <result column="SamplingTime" property="samplingTime"/>
+        <result column="DeletedAt" property="deletedAt"
+                jdbcType="TIMESTAMP"
+                typeHandler="org.apache.ibatis.type.LocalDateTimeTypeHandler"/>
+    </resultMap>
+
+
+    <!-- 通用地区筛选片段：按需拼接县/乡/村 -->
+    <sql id="RegionFilter">
+        <if test="countyDistrict != null and countyDistrict != ''">
+            AND mp."CountyDistrict" = #{countyDistrict}
+        </if>
+        <if test="town != null and town != ''">
+            AND mp."Town" = #{town}
+        </if>
+        <if test="village != null and village != ''">
+            AND mp."Village" = #{village}
+        </if>
+    </sql>
+
+
+
+    <!-- 插入数据 -->
+    <insert id="insertTobaccoLeafData" parameterType="org.example.model.TobaccoLeafData">
+        INSERT INTO "TobaccoLeafDatas"
+        ("MonitoringPointID",
+         "TobaccoLeafData",
+         "Value",
+         "SamplingDate",
+         "IsDelete",
+         "Classification"，
+         "SamplingTime"
+        )
+        VALUES
+            (#{monitoringPointID},
+             #{tobaccoLeafData}::tobacco_leaf_data_enum,
+             #{value},
+             #{samplingDate},
+             #{delete},
+             #{classification}::quality，
+             #{samplingTime}
+            )
+
+    </insert>
+
+    <!-- 获取所有非删除数据 -->
+    <select id="getAllActiveTobaccoLeafData" resultMap="TobaccoLeafDataResultMap">
+        SELECT * FROM "TobaccoLeafDatas"
+        WHERE "IsDelete" = false
+    </select>
+
+    <!-- 获取所有数据 -->
+    <select id="getAllTobaccoLeafData" resultMap="TobaccoLeafDataResultMap">
+        SELECT * FROM "TobaccoLeafDatas"
+    </select>
+
+    <!-- 根据 TobaccoDataId 删除数据 -->
+    <update id="deleteTobaccoLeafDataByTobaccoDataId">
+        UPDATE "TobaccoLeafDatas"
+        SET "IsDelete" = true,
+            "DeletedAt" = NOW()
+        WHERE "TobaccoDataId" = #{tobaccoDataId}
+    </update>
+
+    <!-- 根据 TobaccoDataId 恢复数据 -->
+    <update id="restoreTobaccoLeafDataByTobaccoDataId">
+        UPDATE "TobaccoLeafDatas"
+        SET "IsDelete" = false,
+            "DeletedAt" = NULL
+        WHERE "TobaccoDataId" = #{tobaccoDataId}
+    </update>
+
+    <!-- 查询 TobaccoDataId 是否存在 -->
+    <select id="checkTobaccoDataIdExists" resultType="boolean">
+        SELECT COUNT(*) > 0 FROM "TobaccoLeafDatas"
+        WHERE "TobaccoDataId" = #{tobaccoDataId}
+    </select>
+
+    <!-- 查询 TobaccoDataId 下的数据是否已删除 -->
+    <select id="isTobaccoLeafDataDeleted" resultType="boolean">
+        SELECT "IsDelete" FROM "TobaccoLeafDatas"
+        WHERE "TobaccoDataId" = #{tobaccoDataId}
+    </select>
+
+    <!-- 根据 MonitoringPointId 查询数据 -->
+    <select id="getTobaccoLeafDataByMonitoringPointId" resultMap="TobaccoLeafDataResultMap">
+        SELECT * FROM "TobaccoLeafDatas"
+        WHERE "MonitoringPointID" = #{monitoringPointID}
+    </select>
+<!--    硬删除-->
+    <delete id="hardDeleteExpired">
+        DELETE FROM public."TobaccoLeafDatas"
+        WHERE "IsDelete" = true
+          AND "DeletedAt" IS NOT NULL
+          AND "DeletedAt" &lt; #{cutoff}
+    </delete>
+
+    <!-- 根据 TobaccoDataId 更新数据 -->
+    <update id="updateTobaccoLeafDataByTobaccoDataId" parameterType="org.example.model.TobaccoLeafData">
+        UPDATE "TobaccoLeafDatas"
+        SET
+            "MonitoringPointID" = #{monitoringPointID},
+            "TobaccoLeafData" = #{tobaccoLeafData}::tobacco_leaf_data_enum,
+            "Value" = #{value},
+            "SamplingDate" = #{samplingDate},
+            "IsDelete" = #{delete},
+            "Classification" = #{classification}::quality，
+            "SamplingTime" = #{samplingTime}
+        WHERE "TobaccoDataId" = #{tobaccoDataId}
+    </update>
+
+
+
+
+    <!-- 统计：按县区（可选） -->
+    <select id="countByCounty" parameterType="map" resultType="long">
+        SELECT COUNT(1)
+        FROM public."TobaccoLeafDatas" t
+        JOIN public."MonitoringPoints" mp
+        ON mp."MonitoringPointID" = t."MonitoringPointID"
+        <where>
+            t."IsDelete" = false
+            <if test="countyDistrict != null and countyDistrict != ''">
+                AND mp."CountyDistrict" = #{countyDistrict}
+            </if>
+        </where>
+    </select>
+
+    <!-- 分页查询：按县区（可选） -->
+    <select id="findByCountyAndPage" parameterType="map" resultMap="TobaccoLeafDataResultMap">
+        SELECT t.*
+        FROM public."TobaccoLeafDatas" t
+        JOIN public."MonitoringPoints" mp
+        ON mp."MonitoringPointID" = t."MonitoringPointID"
+        <where>
+            t."IsDelete" = false
+            <if test="countyDistrict != null and countyDistrict != ''">
+                AND mp."CountyDistrict" = #{countyDistrict}
+            </if>
+        </where>
+        ORDER BY t."TobaccoDataId" ASC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 获取某字段所有取值：按县区（白名单选择列） -->
+    <select id="listFieldValuesByCounty" parameterType="map" resultType="java.lang.Object">
+        SELECT
+        <choose>
+            <when test="field == 'Value'"> t."Value" </when>
+            <when test="field == 'SamplingDate'"> t."SamplingDate" </when>
+            <when test="field == 'Classification'"> t."Classification" </when>
+            <when test="field == 'TobaccoLeafData'"> t."TobaccoLeafData" </when>
+            <!-- 如需扩展，在这里继续加 when -->
+            <otherwise> t."Value" </otherwise>
+        </choose>
+        FROM public."TobaccoLeafDatas" t
+        JOIN public."MonitoringPoints" mp
+        ON mp."MonitoringPointID" = t."MonitoringPointID"
+        <where>
+            t."IsDelete" = false
+            <if test="countyDistrict != null and countyDistrict != ''">
+                AND mp."CountyDistrict" = #{countyDistrict}
+            </if>
+        </where>
+        ORDER BY t."TobaccoDataId" ASC
+    </select>
+
+
+
+
+
+
+</mapper>

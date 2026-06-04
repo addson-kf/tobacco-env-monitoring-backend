@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.mapper.SoilEnzymeActivityDataMapper">
+    <!-- 结果映射：将数据库结果映射到模型 -->
+    <resultMap id="SoilEnzymeActivityDataResultMap" type="org.example.model.SoilEnzymeActivityData">
+        <id column="SoilEnzymeActivityId" property="soilEnzymeActivityId"/>
+        <result column="MonitoringPointId" property="monitoringPointId"/>
+        <result column="SoilEnzymeActivityData" property="soilEnzymeActivityData"/>
+        <result column="Value" property="value"/>
+        <result column="Describe" property="describe"/>
+        <result column="SamplingDate" property="samplingDate" jdbcType="TIMESTAMP"
+                typeHandler="org.apache.ibatis.type.LocalDateTimeTypeHandler"/>
+        <result column="IsDelete" property="delete"/>
+        <result column="SamplingTime" property="samplingTime"/>
+        <result column="DeletedAt" property="deletedAt" jdbcType="TIMESTAMP"
+                typeHandler="org.apache.ibatis.type.LocalDateTimeTypeHandler"/>
+    </resultMap>
+
+
+    <!-- 通用地区筛选片段：按需拼接县/乡/村 -->
+    <sql id="RegionFilter">
+        <if test="countyDistrict != null and countyDistrict != ''">
+            AND mp."CountyDistrict" = #{countyDistrict}
+        </if>
+        <if test="town != null and town != ''">
+            AND mp."Town" = #{town}
+        </if>
+        <if test="village != null and village != ''">
+            AND mp."Village" = #{village}
+        </if>
+    </sql>
+
+
+
+    <!-- 插入数据 -->
+    <insert id="insertSoilEnzymeActivityData" parameterType="org.example.model.SoilEnzymeActivityData">
+        INSERT INTO "SoilEnzymeActivityDatas"
+        ("MonitoringPointId",
+         "SoilEnzymeActivityData",
+         "Value",
+         "Describe",
+         "SamplingDate",
+         "IsDelete",
+         "SamplingTime"
+         )
+        VALUES
+            (#{monitoringPointId},
+             #{soilEnzymeActivityData}::soil_enzyme_activity_analysis,
+             #{value},
+             #{describe},
+             #{samplingDate},
+             #{delete},
+             #{samplingTime}
+            )
+    </insert>
+
+    <!-- 获取所有非删除数据 -->
+    <select id="getAllActiveSoilEnzymeActivityData" resultMap="SoilEnzymeActivityDataResultMap">
+        SELECT * FROM "SoilEnzymeActivityDatas"
+        WHERE "IsDelete" = false
+    </select>
+
+    <!-- 获取所有数据 -->
+    <select id="getAllSoilEnzymeActivityData" resultMap="SoilEnzymeActivityDataResultMap">
+        SELECT * FROM "SoilEnzymeActivityDatas"
+    </select>
+
+    <!-- 根据 SoilEnzymeActivityId 删除数据 -->
+    <update id="deleteSoilEnzymeActivityDataById">
+        UPDATE "SoilEnzymeActivityDatas"
+        SET "IsDelete" = true,
+            "DeletedAt" = CURRENT_TIMESTAMP
+        WHERE "SoilEnzymeActivityId" = #{soilEnzymeActivityId}
+    </update>
+
+    <!-- 根据 SoilEnzymeActivityId 恢复数据 -->
+    <update id="restoreSoilEnzymeActivityDataById">
+        UPDATE "SoilEnzymeActivityDatas"
+        SET "IsDelete" = false,
+            "DeletedAt" = NULL
+        WHERE "SoilEnzymeActivityId" = #{soilEnzymeActivityId}
+    </update>
+
+    <!-- 查询 SoilEnzymeActivityId 是否存在 -->
+    <select id="checkSoilEnzymeActivityIdExists" resultType="boolean">
+        SELECT COUNT(*) > 0 FROM "SoilEnzymeActivityDatas"
+        WHERE "SoilEnzymeActivityId" = #{soilEnzymeActivityId}
+    </select>
+
+    <!-- 查询 SoilEnzymeActivityId 下的数据是否已删除 -->
+    <select id="isSoilEnzymeActivityDataDeleted" resultType="boolean">
+        SELECT "IsDelete" FROM "SoilEnzymeActivityDatas"
+        WHERE "SoilEnzymeActivityId" = #{soilEnzymeActivityId}
+    </select>
+
+    <!-- 根据 MonitoringPointId 查询数据 -->
+    <select id="getSoilEnzymeActivityDataByMonitoringPointId" resultMap="SoilEnzymeActivityDataResultMap">
+        SELECT * FROM "SoilEnzymeActivityDatas"
+        WHERE "MonitoringPointId" = #{monitoringPointId}
+    </select>
+<!--    硬删除-->
+    <delete id="hardDeleteExpired">
+        DELETE FROM public."SoilEnzymeActivityDatas"
+        WHERE "IsDelete" = true
+          AND "DeletedAt" IS NOT NULL
+          AND "DeletedAt" &lt; #{cutoff}
+    </delete>
+
+    <!-- 根据 SoilEnzymeActivityId 修改数据 -->
+    <update id="updateSoilEnzymeActivityDataById" parameterType="org.example.model.SoilEnzymeActivityData">
+        UPDATE "SoilEnzymeActivityDatas"
+        SET
+            "MonitoringPointId" = #{monitoringPointId},
+            "SoilEnzymeActivityData" = #{soilEnzymeActivityData}::soil_enzyme_activity_analysis,
+        "Value" = #{value},
+            "Describe" = #{describe},
+            "SamplingDate" = #{samplingDate},
+            "IsDelete" = #{delete},
+            "DeletedAt" = CASE
+            WHEN #{delete} = true THEN COALESCE("DeletedAt", CURRENT_TIMESTAMP)
+            ELSE NULL
+        END,
+        "SamplingTime" = #{samplingTime}
+        WHERE "SoilEnzymeActivityId" = #{soilEnzymeActivityId}
+    </update>
+
+
+    <!-- 统计：按县区（可选） -->
+    <select id="countByCounty" parameterType="map" resultType="long">
+        SELECT COUNT(1)
+        FROM public."SoilEnzymeActivityDatas" s
+        JOIN public."MonitoringPoints" mp
+        ON mp."MonitoringPointID" = s."MonitoringPointId"
+        <where>
+            s."IsDelete" = false
+            <if test="countyDistrict != null and countyDistrict != ''">
+                AND mp."CountyDistrict" = #{countyDistrict}
+            </if>
+        </where>
+    </select>
+
+    <!-- 分页查询：按县区（可选） -->
+    <select id="findByCountyAndPage" parameterType="map" resultMap="SoilEnzymeActivityDataResultMap">
+        SELECT s.*
+        FROM public."SoilEnzymeActivityDatas" s
+        JOIN public."MonitoringPoints" mp
+        ON mp."MonitoringPointID" = s."MonitoringPointId"
+        <where>
+            s."IsDelete" = false
+            <if test="countyDistrict != null and countyDistrict != ''">
+                AND mp."CountyDistrict" = #{countyDistrict}
+            </if>
+        </where>
+        ORDER BY s."SoilEnzymeActivityId" ASC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 获取某字段所有取值：按县区（白名单选择列） -->
+    <select id="listFieldValuesByCounty" parameterType="map" resultType="java.lang.Object">
+        SELECT
+        <choose>
+            <when test="field == 'Value'"> s."Value" </when>
+            <when test="field == 'SamplingDate'"> s."SamplingDate" </when>
+            <when test="field == 'Describe'"> s."Describe" </when>
+            <!-- 如需扩展，在这里继续加 when -->
+            <otherwise> s."Value" </otherwise>
+        </choose>
+        FROM public."SoilEnzymeActivityDatas" s
+        JOIN public."MonitoringPoints" mp
+        ON mp."MonitoringPointID" = s."MonitoringPointId"
+        <where>
+            s."IsDelete" = false
+            <if test="countyDistrict != null and countyDistrict != ''">
+                AND mp."CountyDistrict" = #{countyDistrict}
+            </if>
+        </where>
+        ORDER BY s."SoilEnzymeActivityId" ASC
+    </select>
+
+    <select id="listFieldValuesByRegion" parameterType="map" resultType="java.lang.Object">
+        SELECT
+        <choose>
+            <when test="field == 'Value'"> s."Value" </when>
+            <when test="field == 'SamplingDate'"> s."SamplingDate" </when>
+            <when test="field == 'Describe'"> s."Describe" </when>
+            <otherwise> s."Value" </otherwise>
+        </choose>
+        FROM public."SoilEnzymeActivityDatas" s
+        JOIN public."MonitoringPoints" mp
+        ON mp."MonitoringPointID" = s."MonitoringPointId"  <!-- 注意这里是 Id -->
+        <where>
+            s."IsDelete" = false
+            <include refid="RegionFilter"/>
+        </where>
+        ORDER BY s."SoilEnzymeActivityId" ASC
+    </select>
+
+
+
+
+</mapper>

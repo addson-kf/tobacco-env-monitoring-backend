@@ -1,0 +1,387 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.mapper.AnalysisMapper">
+
+    <!-- === Mean: Soil === -->
+    <select id="meanSoil" resultType="map">
+        WITH base AS (
+        SELECT s."MonitoringPointID", s."Value"
+        FROM public."SoilDatas" s
+        WHERE s."IsDelete" = false
+        AND lower(btrim(s."SoilAttribute"::text)) = lower(btrim(#{attr}))
+        <if test="period != null and period != ''">
+            AND lower(btrim(s."SoilSamplingTime")) = lower(btrim(#{period}))
+        </if>
+        <if test="year != null">
+            AND s."SamplingDate"::text LIKE #{year} || '%'
+        </if>
+        )
+        SELECT COUNT(*)::int AS n, AVG(base."Value")::float8 AS mean
+        FROM base
+        JOIN public."MonitoringPoints" mp ON mp."MonitoringPointID" = base."MonitoringPointID"
+        <where>
+            mp."IsDelete" = false
+            <if test="countyDistrict != null and countyDistrict != ''">
+                AND lower(btrim(mp."CountyDistrict")) = lower(btrim(#{countyDistrict}))
+            </if>
+            <if test="town != null and town != ''">
+                AND lower(btrim(mp."Town")) = lower(btrim(#{town}))
+            </if>
+            <if test="village != null and village != ''">
+                AND lower(btrim(mp."Village")) = lower(btrim(#{village}))
+            </if>
+        </where>
+    </select>
+
+    <!-- === Mean: Enzyme === -->
+    <select id="meanEnzyme" resultType="map">
+        WITH base AS (
+        SELECT e."MonitoringPointID", e."Value"
+        FROM public."SoilEnzymeActivityDatas" e
+        WHERE e."IsDelete" = false
+        AND lower(btrim(e."SoilAttribute"::text)) = lower(btrim(#{attr}))
+        <if test="period != null and period != ''">
+            AND lower(btrim(e."SoilSamplingTime")) = lower(btrim(#{period}))
+        </if>
+        <if test="year != null">
+            AND e."SamplingDate"::text LIKE #{year} || '%'
+        </if>
+        )
+        SELECT COUNT(*)::int AS n, AVG(base."Value")::float8 AS mean
+        FROM base
+        JOIN public."MonitoringPoints" mp ON mp."MonitoringPointID" = base."MonitoringPointID"
+        <where>
+            mp."IsDelete" = false
+            <if test="countyDistrict != null and countyDistrict != ''">
+                AND lower(btrim(mp."CountyDistrict")) = lower(btrim(#{countyDistrict}))
+            </if>
+            <if test="town != null and town != ''">
+                AND lower(btrim(mp."Town")) = lower(btrim(#{town}))
+            </if>
+            <if test="village != null and village != ''">
+                AND lower(btrim(mp."Village")) = lower(btrim(#{village}))
+            </if>
+        </where>
+    </select>
+
+    <!-- === Mean: Leaf === -->
+    <select id="meanLeaf" resultType="map">
+        WITH base AS (
+        SELECT t."MonitoringPointID", t."Value"
+        FROM public."TobaccoLeafDatas" t
+        WHERE t."IsDelete" = false
+        AND lower(btrim(t."TobaccoLeafData"::text)) = lower(btrim(#{attr}))
+        <if test="period != null and period != ''">
+            AND lower(btrim(t."SoilSamplingTime")) = lower(btrim(#{period}))
+        </if>
+        <if test="year != null">
+            AND t."SamplingDate"::text LIKE #{year} || '%'
+        </if>
+        )
+        SELECT COUNT(*)::int AS n, AVG(base."Value")::float8 AS mean
+        FROM base
+        JOIN public."MonitoringPoints" mp ON mp."MonitoringPointID" = base."MonitoringPointID"
+        <where>
+            mp."IsDelete" = false
+            <if test="countyDistrict != null and countyDistrict != ''">
+                AND lower(btrim(mp."CountyDistrict")) = lower(btrim(#{countyDistrict}))
+            </if>
+            <if test="town != null and town != ''">
+                AND lower(btrim(mp."Town")) = lower(btrim(#{town}))
+            </if>
+            <if test="village != null and village != ''">
+                AND lower(btrim(mp."Village")) = lower(btrim(#{village}))
+            </if>
+        </where>
+    </select>
+
+    <!-- === Mean: Weather === -->
+    <select id="meanWeather" resultType="map">
+        WITH base AS (
+        SELECT w."MonitoringPointID", w."Value"
+        FROM public."WeatherDatas" w
+        WHERE w."IsDelete" = false
+        AND lower(btrim(w."WeatherType"::text)) = lower(btrim(#{attr}))
+        <if test="period != null and period != ''">
+            AND lower(btrim(w."SoilSamplingTime")) = lower(btrim(#{period}))
+        </if>
+        <if test="year != null">
+            AND w."SamplingDate"::text LIKE #{year} || '%'
+        </if>
+        )
+        SELECT COUNT(*)::int AS n, AVG(base."Value")::float8 AS mean
+        FROM base
+        JOIN public."MonitoringPoints" mp ON mp."MonitoringPointID" = base."MonitoringPointID"
+        <where>
+            mp."IsDelete" = false
+            <if test="countyDistrict != null and countyDistrict != ''">
+                AND lower(btrim(mp."CountyDistrict")) = lower(btrim(#{countyDistrict}))
+            </if>
+            <if test="town != null and town != ''">
+                AND lower(btrim(mp."Town")) = lower(btrim(#{town}))
+            </if>
+            <if test="village != null and village != ''">
+                AND lower(btrim(mp."Village")) = lower(btrim(#{village}))
+            </if>
+        </where>
+    </select>
+
+    <!-- === Mean: Smoking === -->
+    <select id="meanSmoking" resultType="map">
+        WITH base AS (
+        SELECT s."MonitoringPointID", s."Value"
+        FROM public."SmokingEvaluationDatas" s
+        WHERE s."IsDelete" = false
+        AND lower(btrim(s."SmokingEvaluation"::text)) = lower(btrim(#{kx}))
+        <if test="period != null and period != ''">
+            AND lower(btrim(s."SoilSamplingTime")) = lower(btrim(#{period}))
+        </if>
+        <if test="year != null">
+            AND s."SamplingDate"::text LIKE #{year} || '%'
+        </if>
+        )
+        SELECT COUNT(*)::int AS n, AVG(base."Value")::float8 AS mean
+        FROM base
+        JOIN public."MonitoringPoints" mp ON mp."MonitoringPointID" = base."MonitoringPointID"
+        <where>
+            mp."IsDelete" = false
+            <if test="county != null and county != ''">
+                AND lower(btrim(mp."CountyDistrict")) = lower(btrim(#{county}))
+            </if>
+            <if test="town != null and town != ''">
+                AND lower(btrim(mp."Town")) = lower(btrim(#{town}))
+            </if>
+            <if test="village != null and village != ''">
+                AND lower(btrim(mp."Village")) = lower(btrim(#{village}))
+            </if>
+        </where>
+    </select>
+
+    <!-- === Pairs: Soil === -->
+    <select id="soilPairs" resultType="org.example.model.analysis.CorrelationXY">
+        WITH
+        x AS (
+        SELECT s."MonitoringPointID", s."SamplingDate", s."Value"
+        FROM public."SoilDatas" s
+        WHERE s."IsDelete" = false
+        AND lower(btrim(s."SoilAttribute"::text)) = lower(btrim(#{attrX}))
+        <if test="period != null and period != ''">
+            AND lower(btrim(s."SoilSamplingTime")) = lower(btrim(#{period}))
+        </if>
+        <if test="year != null">
+            AND s."SamplingDate"::text LIKE #{year} || '%'
+        </if>
+        ),
+        y AS (
+        SELECT s."MonitoringPointID", s."SamplingDate", s."Value"
+        FROM public."SoilDatas" s
+        WHERE s."IsDelete" = false
+        AND lower(btrim(s."SoilAttribute"::text)) = lower(btrim(#{attrY}))
+        <if test="period != null and period != ''">
+            AND lower(btrim(s."SoilSamplingTime")) = lower(btrim(#{period}))
+        </if>
+        <if test="year != null">
+            AND s."SamplingDate"::text LIKE #{year} || '%'
+        </if>
+        )
+        SELECT AVG(x."Value") AS x, AVG(y."Value") AS y
+        FROM x
+        JOIN y ON y."MonitoringPointID" = x."MonitoringPointID"
+        AND DATE_TRUNC('day', y."SamplingDate") = DATE_TRUNC('day', x."SamplingDate")
+        JOIN public."MonitoringPoints" mp ON mp."MonitoringPointID" = x."MonitoringPointID"
+        WHERE x."Value" IS NOT NULL AND y."Value" IS NOT NULL
+        <if test="countyDistrict != null and countyDistrict != ''">
+            AND lower(btrim(mp."CountyDistrict")) = lower(btrim(#{countyDistrict}))
+        </if>
+        <if test="town != null and town != ''">
+            AND lower(btrim(mp."Town")) = lower(btrim(#{town}))
+        </if>
+        <if test="village != null and village != ''">
+            AND lower(btrim(mp."Village")) = lower(btrim(#{village}))
+        </if>
+        <!-- ✅ 每个监测点+日期 作为一个散点 -->
+        GROUP BY x."MonitoringPointID", DATE_TRUNC('day', x."SamplingDate");
+    </select>
+
+    <!-- === Pairs: Enzyme === -->
+    <select id="enzymePairs" resultType="org.example.model.analysis.CorrelationXY">
+        WITH
+        x AS (
+        SELECT e."MonitoringPointID", e."SamplingDate", e."Value"
+        FROM public."SoilEnzymeActivityDatas" e
+        WHERE e."IsDelete" = false
+        AND lower(btrim(e."SoilAttribute"::text)) = lower(btrim(#{attrX}))
+        <if test="period != null and period != ''">
+            AND lower(btrim(e."SoilSamplingTime")) = lower(btrim(#{period}))
+        </if>
+        <if test="year != null">
+            AND e."SamplingDate"::text LIKE #{year} || '%'
+        </if>
+        ),
+        y AS (
+        SELECT e."MonitoringPointID", e."SamplingDate", e."Value"
+        FROM public."SoilEnzymeActivityDatas" e
+        WHERE e."IsDelete" = false
+        AND lower(btrim(e."SoilAttribute"::text)) = lower(btrim(#{attrY}))
+        <if test="period != null and period != ''">
+            AND lower(btrim(e."SoilSamplingTime")) = lower(btrim(#{period}))
+        </if>
+        <if test="year != null">
+            AND e."SamplingDate"::text LIKE #{year} || '%'
+        </if>
+        )
+        SELECT AVG(x."Value") AS x, AVG(y."Value") AS y
+        FROM x
+        JOIN y ON y."MonitoringPointID" = x."MonitoringPointID"
+        AND DATE_TRUNC('day', y."SamplingDate") = DATE_TRUNC('day', x."SamplingDate")
+        JOIN public."MonitoringPoints" mp ON mp."MonitoringPointID" = x."MonitoringPointID"
+        WHERE x."Value" IS NOT NULL AND y."Value" IS NOT NULL
+        <if test="countyDistrict != null and countyDistrict != ''">
+            AND lower(btrim(mp."CountyDistrict")) = lower(btrim(#{countyDistrict}))
+        </if>
+        <if test="town != null and town != ''">
+            AND lower(btrim(mp."Town")) = lower(btrim(#{town}))
+        </if>
+        <if test="village != null and village != ''">
+            AND lower(btrim(mp."Village")) = lower(btrim(#{village}))
+        </if>
+        GROUP BY x."MonitoringPointID", DATE_TRUNC('day', x."SamplingDate");
+    </select>
+
+    <!-- === Pairs: Leaf === -->
+    <select id="leafPairs" resultType="org.example.model.analysis.CorrelationXY">
+        WITH
+        x AS (
+        SELECT t."MonitoringPointID", t."SamplingDate", t."Value"
+        FROM public."TobaccoLeafDatas" t
+        WHERE t."IsDelete" = false
+        AND lower(btrim(t."TobaccoLeafData"::text)) = lower(btrim(#{attrX}))
+        <if test="period != null and period != ''">
+            AND lower(btrim(t."SoilSamplingTime")) = lower(btrim(#{period}))
+        </if>
+        <if test="year != null">
+            AND t."SamplingDate"::text LIKE #{year} || '%'
+        </if>
+        ),
+        y AS (
+        SELECT t."MonitoringPointID", t."SamplingDate", t."Value"
+        FROM public."TobaccoLeafDatas" t
+        WHERE t."IsDelete" = false
+        AND lower(btrim(t."TobaccoLeafData"::text)) = lower(btrim(#{attrY}))
+        <if test="period != null and period != ''">
+            AND lower(btrim(t."SoilSamplingTime")) = lower(btrim(#{period}))
+        </if>
+        <if test="year != null">
+            AND t."SamplingDate"::text LIKE #{year} || '%'
+        </if>
+        )
+        SELECT AVG(x."Value") AS x, AVG(y."Value") AS y
+        FROM x
+        JOIN y ON y."MonitoringPointID" = x."MonitoringPointID"
+        AND DATE_TRUNC('day', y."SamplingDate") = DATE_TRUNC('day', x."SamplingDate")
+        JOIN public."MonitoringPoints" mp ON mp."MonitoringPointID" = x."MonitoringPointID"
+        WHERE x."Value" IS NOT NULL AND y."Value" IS NOT NULL
+        <if test="countyDistrict != null and countyDistrict != ''">
+            AND lower(btrim(mp."CountyDistrict")) = lower(btrim(#{countyDistrict}))
+        </if>
+        <if test="town != null and town != ''">
+            AND lower(btrim(mp."Town")) = lower(btrim(#{town}))
+        </if>
+        <if test="village != null and village != ''">
+            AND lower(btrim(mp."Village")) = lower(btrim(#{village}))
+        </if>
+        GROUP BY x."MonitoringPointID", DATE_TRUNC('day', x."SamplingDate");
+    </select>
+
+    <!-- === Pairs: Weather === -->
+    <select id="weatherPairs" resultType="org.example.model.analysis.CorrelationXY">
+        WITH
+        x AS (
+        SELECT w."MonitoringPointID", w."SamplingDate", w."Value"
+        FROM public."WeatherDatas" w
+        WHERE w."IsDelete" = false
+        AND lower(btrim(w."WeatherType"::text)) = lower(btrim(#{attrX}))
+        <if test="period != null and period != ''">
+            AND lower(btrim(w."SoilSamplingTime")) = lower(btrim(#{period}))
+        </if>
+        <if test="year != null">
+            AND w."SamplingDate"::text LIKE #{year} || '%'
+        </if>
+        ),
+        y AS (
+        SELECT w."MonitoringPointID", w."SamplingDate", w."Value"
+        FROM public."WeatherDatas" w
+        WHERE w."IsDelete" = false
+        AND lower(btrim(w."WeatherType"::text)) = lower(btrim(#{attrY}))
+        <if test="period != null and period != ''">
+            AND lower(btrim(w."SoilSamplingTime")) = lower(btrim(#{period}))
+        </if>
+        <if test="year != null">
+            AND w."SamplingDate"::text LIKE #{year} || '%'
+        </if>
+        )
+        SELECT AVG(x."Value") AS x, AVG(y."Value") AS y
+        FROM x
+        JOIN y ON y."MonitoringPointID" = x."MonitoringPointID"
+        AND DATE_TRUNC('day', y."SamplingDate") = DATE_TRUNC('day', x."SamplingDate")
+        JOIN public."MonitoringPoints" mp ON mp."MonitoringPointID" = x."MonitoringPointID"
+        WHERE x."Value" IS NOT NULL AND y."Value" IS NOT NULL
+        <if test="countyDistrict != null and countyDistrict != ''">
+            AND lower(btrim(mp."CountyDistrict")) = lower(btrim(#{countyDistrict}))
+        </if>
+        <if test="town != null and town != ''">
+            AND lower(btrim(mp."Town")) = lower(btrim(#{town}))
+        </if>
+        <if test="village != null and village != ''">
+            AND lower(btrim(mp."Village")) = lower(btrim(#{village}))
+        </if>
+        GROUP BY x."MonitoringPointID", DATE_TRUNC('day', x."SamplingDate");
+    </select>
+
+    <!-- === Pairs: Smoking === -->
+    <select id="smokingPairs" resultType="org.example.model.analysis.CorrelationXY">
+        WITH
+        x AS (
+        SELECT s."MonitoringPointID", s."SamplingDate", s."Value"
+        FROM public."SmokingEvaluationDatas" s
+        WHERE s."IsDelete" = false
+        AND lower(btrim(s."SmokingEvaluation"::text)) = lower(btrim(#{kx}))
+        <if test="period != null and period != ''">
+            AND lower(btrim(s."SoilSamplingTime")) = lower(btrim(#{period}))
+        </if>
+        <if test="year != null">
+            AND s."SamplingDate"::text LIKE #{year} || '%'
+        </if>
+        ),
+        y AS (
+        SELECT s."MonitoringPointID", s."SamplingDate", s."Value"
+        FROM public."SmokingEvaluationDatas" s
+        WHERE s."IsDelete" = false
+        AND lower(btrim(s."SmokingEvaluation"::text)) = lower(btrim(#{ky}))
+        <if test="period != null and period != ''">
+            AND lower(btrim(s."SoilSamplingTime")) = lower(btrim(#{period}))
+        </if>
+        <if test="year != null">
+            AND s."SamplingDate"::text LIKE #{year} || '%'
+        </if>
+        )
+        SELECT AVG(x."Value") AS x, AVG(y."Value") AS y
+        FROM x
+        JOIN y ON y."MonitoringPointID" = x."MonitoringPointID"
+        AND DATE_TRUNC('day', y."SamplingDate") = DATE_TRUNC('day', x."SamplingDate")
+        JOIN public."MonitoringPoints" mp ON mp."MonitoringPointID" = x."MonitoringPointID"
+        WHERE x."Value" IS NOT NULL AND y."Value" IS NOT NULL
+        <if test="county != null and county != ''">
+            AND lower(btrim(mp."CountyDistrict")) = lower(btrim(#{county}))
+        </if>
+        <if test="town != null and town != ''">
+            AND lower(btrim(mp."Town")) = lower(btrim(#{town}))
+        </if>
+        <if test="village != null and village != ''">
+            AND lower(btrim(mp."Village")) = lower(btrim(#{village}))
+        </if>
+        GROUP BY x."MonitoringPointID", DATE_TRUNC('day', x."SamplingDate");
+    </select>
+
+</mapper>

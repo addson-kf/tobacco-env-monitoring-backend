@@ -1,0 +1,44 @@
+# Maven
+target/
+
+# IDEA
+.idea/
+*.iml
+
+# Logs
+logs/
+*.log
+
+# Build
+out/
+build/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local Config
+application.properties
+application.yml
+
+# Database Backup
+*.sql
+*.backup
+*.dump
+
+# Excel Data
+*.xlsx
+*.xls
+
+# 保留演示数据
+!src/main/resources/excel/demo_soil_data.xlsx
+
+# Upload Files
+uploads/
+
+# Temp
+temp/
+tmp/
+
+# VSCode
+.vscode/

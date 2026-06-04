@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.mapper.SanmingxianquPolygonMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="SanmingxianquPolygonMap" type="org.example.model.SanmingxianquPolygon">
+        <id column="gid" property="gid" jdbcType="INTEGER"/>
+        <result column="area" property="area" jdbcType="NUMERIC"/>
+        <result column="perimeter" property="perimeter" jdbcType="NUMERIC"/>
+        <result column="bount_" property="bount_" jdbcType="DOUBLE"/>
+        <result column="bount_id" property="bountId" jdbcType="DOUBLE"/>
+        <result column="gbcode" property="gbcode" jdbcType="VARCHAR"/>
+        <result column="adcode99" property="adcode99" jdbcType="VARCHAR"/>
+        <result column="name99" property="name99" jdbcType="VARCHAR"/>
+        <result column="sh2" property="sh2" jdbcType="VARCHAR"/>
+        <result column="di2" property="di2" jdbcType="VARCHAR"/>
+        <result column="x2" property="x2" jdbcType="VARCHAR"/>
+        <result column="centroid_y" property="centroidY" jdbcType="NUMERIC"/>
+        <result column="centroid_x" property="centroidX" jdbcType="NUMERIC"/>
+        <result column="ph值" property="phValue" jdbcType="NUMERIC"/>
+        <result column="geom" property="geom" jdbcType="OTHER"
+                typeHandler="org.example.handler.JtsGeometryTypeHandler"/>
+    </resultMap>
+
+     <!--查询所有记录 -->
+        <select id="findAll" resultMap="SanmingxianquPolygonMap">
+            /*SELECT
+                s."gid",
+                s."area",
+                s."perimeter",
+                s."bount_",
+                s."bount_id",
+                s."gbcode",
+                s."adcode99",
+                s."name99",
+                s."sh2",
+                s."di2",
+                s."x2",
+                s."centroid_y",
+                s."centroid_x",
+                s."ph值",
+                ST_AsText(s."geom") as "geom"
+            FROM public."sanmingxianqu_polygon" s
+            ORDER BY s."gid" ASC*/
+        </select>
+</mapper>

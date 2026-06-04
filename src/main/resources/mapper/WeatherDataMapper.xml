@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+   <!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.mapper.WeatherDataMapper">
+   <resultMap id="WeatherDataResultMap" type="org.example.model.WeatherData">
+     <id column="WeatherId" property="weatherId"/>
+     <result column="MonitoringPointID" property="monitoringPointId"/>
+     <result column="WeatherType" property="weatherType"/>
+     <result column="Value" property="value"/>
+     <result column="Describe" property="describe"/>
+     <result column="AcquisitionCycle" property="acquisitionCycle"/>
+     <result column="DataSource" property="dataSource"/>
+     <result column="SamplingDate" property="samplingDate" jdbcType="TIMESTAMP"
+            typeHandler="org.apache.ibatis.type.LocalDateTimeTypeHandler"/>
+     <result column="IsDelete" property="delete"/>
+     <result column="SoilSamplingTime" property="samplingTime"/>
+     <result column="DeletedAt" property="deletedAt" jdbcType="TIMESTAMP"
+            typeHandler="org.apache.ibatis.type.LocalDateTimeTypeHandler"/>
+
+   </resultMap>
+
+
+    <!-- 通用地区筛选片段：按需拼接县/乡/村 -->
+    <sql id="RegionFilter">
+        <if test="countyDistrict != null and countyDistrict != ''">
+            AND mp."CountyDistrict" = #{countyDistrict}
+        </if>
+        <if test="town != null and town != ''">
+            AND mp."Town" = #{town}
+        </if>
+        <if test="village != null and village != ''">
+            AND mp."Village" = #{village}
+        </if>
+    </sql>
+
+
+
+    <!-- 插入数据 -->
+    <insert id="insertWeatherData" parameterType="org.example.model.WeatherData">
+        INSERT INTO "WeatherDatas"
+        ("MonitoringPointID",
+         "WeatherType",
+         "Value",
+         "Describe",
+         "AcquisitionCycle",
+         "DataSource",
+         "SamplingDate",
+         "IsDelete",
+         "SoilSamplingTime"
+         )
+        VALUES
+            (#{monitoringPointId},
+             #{weatherType}::weather_data_type,
+             #{value},
+             #{describe},
+             #{acquisitionCycle},
+             #{dataSource},
+             #{samplingDate},
+             #{delete},
+             #{samplingTime}
+            )
+    </insert>
+
+    <!-- 获取所有非删除数据 -->
+    <select id="getAllActiveWeatherData" resultMap="WeatherDataResultMap">
+        SELECT * FROM "WeatherDatas"
+        WHERE "IsDelete" = false
+    </select>
+
+    <!-- 获取所有数据 -->
+    <select id="getAllWeatherData" resultMap="WeatherDataResultMap">
+        SELECT * FROM "WeatherDatas"
+    </select>
+
+    <!-- 根据 WeatherId 删除数据 -->
+    <update id="deleteWeatherDataByWeatherId">
+        UPDATE "WeatherDatas"
+        SET "IsDelete" = true,
+            "DeletedAt" = CURRENT_TIMESTAMP
+        WHERE "WeatherId" = #{weatherId}
+    </update>
+
+    <!-- 根据 WeatherId 恢复数据 -->
+    <update id="restoreWeatherDataByWeatherId">
+        UPDATE "WeatherDatas"
+        SET "IsDelete" = false,
+            "DeletedAt" = NULL
+        WHERE "WeatherId" = #{weatherId}
+    </update>
+
+    <!-- 查询 WeatherId 是否存在 -->
+    <select id="checkWeatherIdExists" resultType="boolean">
+        SELECT COUNT(*) > 0 FROM "WeatherDatas"
+        WHERE "WeatherId" = #{weatherId}
+    </select>
+
+    <!-- 查询 WeatherId 下的数据是否已删除 -->
+    <select id="isWeatherDataDeleted" resultType="boolean">
+        SELECT "IsDelete" FROM "WeatherDatas"
+        WHERE "WeatherId" = #{weatherId}
+    </select>
+
+    <!-- 根据 MonitoringPointId 查询数据 -->
+    <select id="getWeatherDataByMonitoringPointId" resultMap="WeatherDataResultMap">
+        SELECT * FROM "WeatherDatas"
+        WHERE "MonitoringPointID" = #{monitoringPointId}
+    </select>
+
+    <!-- 根据 WeatherId 修改数据 -->
+    <update id="updateWeatherDataByWeatherId" parameterType="org.example.model.WeatherData">
+        UPDATE "WeatherDatas"
+        SET
+            "MonitoringPointID" = #{monitoringPointId},
+            "WeatherType" = #{weatherType}::weather_data_type,
+            "Value" = #{value},
+            "Describe" = #{describe},
+            "AcquisitionCycle" = #{acquisitionCycle},
+            "DataSource" = #{dataSource},
+            "SamplingDate" = #{samplingDate},
+            "IsDelete" = #{delete},
+            "DeletedAt" = CASE
+            WHEN #{delete} = true THEN COALESCE("DeletedAt", CURRENT_TIMESTAMP)
+            ELSE NULL
+        END,
+            "SoilSamplingTime" = #{samplingTime}
+        WHERE "WeatherId" = #{weatherId}
+    </update>
+
+<!-- 硬删除：按 WeatherId -->
+    <delete id="hardDeleteExpired">
+        DELETE FROM "WeatherDatas"
+        WHERE "IsDelete" = true
+          AND "DeletedAt" IS NOT NULL
+          AND "DeletedAt" &lt; #{cutoff}
+    </delete>
+
+
+    <!-- 统计：按县区（可选） -->
+    <select id="countByCounty" parameterType="map" resultType="long">
+        SELECT COUNT(1)
+        FROM public."WeatherDatas" w
+        JOIN public."MonitoringPoints" mp
+        ON mp."MonitoringPointID" = w."MonitoringPointID"
+        <where>
+            w."IsDelete" = false
+            <if test="countyDistrict != null and countyDistrict != ''">
+                AND mp."CountyDistrict" = #{countyDistrict}
+            </if>
+        </where>
+    </select>
+
+    <!-- 分页查询：按县区（可选） -->
+    <select id="findByCountyAndPage" parameterType="map" resultMap="WeatherDataResultMap">
+        SELECT w.*
+        FROM public."WeatherDatas" w
+        JOIN public."MonitoringPoints" mp
+        ON mp."MonitoringPointID" = w."MonitoringPointID"
+        <where>
+            w."IsDelete" = false
+            <if test="countyDistrict != null and countyDistrict != ''">
+                AND mp."CountyDistrict" = #{countyDistrict}
+            </if>
+        </where>
+        ORDER BY w."WeatherId" ASC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 获取某字段所有取值：按县区（白名单选择列） -->
+    <select id="listFieldValuesByCounty" parameterType="map" resultType="java.lang.Object">
+        SELECT
+        <choose>
+            <when test="field == 'WeatherType'"> w."WeatherType" </when>
+            <when test="field == 'Value'"> w."Value" </when>
+            <when test="field == 'Describe'"> w."Describe" </when>
+            <when test="field == 'AcquisitionCycle'"> w."AcquisitionCycle" </when>
+            <!-- 如需扩展，在这里继续加 when -->
+            <otherwise> w."Value" </otherwise>
+        </choose>
+        FROM public."WeatherDatas" w
+        JOIN public."MonitoringPoints" mp
+        ON mp."MonitoringPointID" = w."MonitoringPointID"
+        <where>
+            w."IsDelete" = false
+            <if test="countyDistrict != null and countyDistrict != ''">
+                AND mp."CountyDistrict" = #{countyDistrict}
+            </if>
+        </where>
+        ORDER BY w."WeatherId" ASC
+    </select>
+
+
+<!-- 根据区域筛选-->
+    <select id="listFieldValuesByRegion" parameterType="map" resultType="java.lang.Object">
+        SELECT
+        <choose>
+            <when test="field == 'WeatherType'"> w."WeatherType" </when>
+            <when test="field == 'Value'"> w."Value" </when>
+            <when test="field == 'Describe'"> w."Describe" </when>
+            <when test="field == 'AcquisitionCycle'"> w."AcquisitionCycle" </when>
+            <otherwise> w."Value" </otherwise>
+        </choose>
+        FROM public."WeatherDatas" w
+        JOIN public."MonitoringPoints" mp
+        ON mp."MonitoringPointID" = w."MonitoringPointID"
+        <where>
+            w."IsDelete" = false
+            <include refid="RegionFilter"/>
+        </where>
+        ORDER BY w."WeatherId" ASC
+    </select>
+
+</mapper>
