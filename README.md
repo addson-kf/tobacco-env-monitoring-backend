@@ -94,7 +94,7 @@ src/main/java/org/example
 ### 1. 克隆项目
 
 ```bash
-git clone https://github.com/yourname/tobacco-env-monitoring-backend.git
+git clone https://github.com/addson-kf/tobacco-env-monitoring-backend.git
 ```
 
 ### 2. 创建数据库
@@ -141,16 +141,6 @@ mvn spring-boot:run
 
 ---
 
-## 项目截图
-
-可在此处添加：
-
-* 登录页面
-* 数据管理页面
-* 数据统计页面
-* 地图可视化页面
-
----
 
 ## 声明
 
